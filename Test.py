@@ -1,4 +1,6 @@
 import json
+import Translit
+import Translate
 
 jsonNameSCOPUS = 'scopus_0.json'
 jsonNameWOS = 'wos_0.json'
@@ -19,3 +21,6 @@ for key in data:
         print("To much output!")
         break
 print("Done!")
+
+print(Translit.transliterate(u"ЮЛЯ Тестинг Первозванский"))
+print(Translate.translateString(u"ЮЛЯ Тестинг Тестинг"))
