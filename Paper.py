@@ -22,13 +22,13 @@ class Paper:
         range_pages = ""
         title = ""
         keywords = ""
-        doi = ""
+        doi = 0
         num_authors = 0
         authors = [] #from Author
         #volume
 
         def __repr__(self):
-            return str(self.doi) + " " + str(self.title) + " " + str(Author.lastname)
+            return str(self.year_publ) + " " + str(self.doi) + " " + str(self.title)
 
 
 
@@ -94,22 +94,28 @@ for x in dirs_spin:
     papers = []
     for jsPaper in js:
         paper = Paper()
-        if "codes" in jsPaper:
-            if jsPaper["codes"]["code"] is dict:
-                for jsDoi in jsPaper["codes"]["code"]:
-                    print(jsDoi)
-                    if jsDoi["type"] == "DOI":
-                        paper.doi = jsDoi["text"]
-        if jsPaper["titles"]["title"] is dict:
-            if jsPaper["titles"]["title"]["text"] is str:
-                paper.title = jsPaper["titles"]["title"]["text"]
+        if "yearpubl" in jsPaper:
+            # if jsPaper["yearpubl"] is dict:
+                paper.year_publ=jsPaper["yearpubl"]
+        # if "codes" in jsPaper:
+        #     if "codes" in jsPaper:
+        #     # if jsPaper["codes"]["code"] is dict:
+        #         for jsDoi in jsPaper["codes"]["code"]:
+        #             # pprint.pprint(jsDoi)
+        #             if (jsDoi["type"] == "DOI"):
+        #                 paper.doi = jsPaper["text"]
+        if "titles" in jsPaper:
+            # if jsPaper["titles"]["title"] is dict:
+                # if jsPaper["titles"]["title"]["text"] is str:
+                     paper.title = jsPaper["titles"]["title"]#["text"]
         if jsPaper["authors"]["author"] is dict:
             for jsAuthor in jsPaper["authors"]["author"]:
                 author = Author()
                 author.lastname = jsAuthor["lastname"]
+                #parameters author
                 paper.authors.append(author)
         papers.append(paper)
-    # pprint.pprint(papers)
+    pprint.pprint(papers)
     #  # scanDict(Author.lastname,js, "lastname") - 1 list
     # # scan2Dict(Paper.type, js, ["type"])
     # scan2Dict(Paper.year_publ, js, ["yearpubl"])
