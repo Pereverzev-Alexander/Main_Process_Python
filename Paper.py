@@ -10,6 +10,10 @@ class Author:
         lastname = ""
         initials = ""
         affiliations = ""
+
+        def __repr__(self):
+            return str(self.lastname) + " " + str(self.initials) + " " + str(self.affiliations)
+
         # def __init__(self, par1, par2, par3):
         #     self.lastname = par1
         #     super().__init__()
@@ -21,14 +25,14 @@ class Paper:
         year_publ = 0
         range_pages = ""
         title = ""
-        keywords = ""
+        keywords = []
         doi = 0
         num_authors = 0
         authors = [] #from Author
         #volume
 
         def __repr__(self):
-            return str(self.year_publ) + " " + str(self.doi) + " " + str(self.title)
+            return str(self.keywords) + " " + str(self.year_publ) + " " + str(self.doi) + " " + str(self.authors) + " " + str(self.title)+ " " + str(self.language)+ " " + str(self.num_authors)
 
 
 
@@ -95,27 +99,53 @@ for x in dirs_spin:
     for jsPaper in js:
         paper = Paper()
         if "yearpubl" in jsPaper:
-            # if jsPaper["yearpubl"] is dict:
                 paper.year_publ=jsPaper["yearpubl"]
-        # if "codes" in jsPaper:
-        #     if "codes" in jsPaper:
-        #     # if jsPaper["codes"]["code"] is dict:
-        #         for jsDoi in jsPaper["codes"]["code"]:
-        #             # pprint.pprint(jsDoi)
-        #             if (jsDoi["type"] == "DOI"):
-        #                 paper.doi = jsPaper["text"]
+        if "language" in jsPaper:
+            paper.language = jsPaper["language"]
+        if "pages" in jsPaper:
+            paper.range_pages = jsPaper["pages"]
+        if "codes" in jsPaper:
+            if isinstance(jsPaper["codes"]["code"], dict):
+                jsDoi = jsPaper["codes"]["code"]
+                if jsDoi["type"] == "DOI":
+                    paper.doi = jsDoi["text"]
         if "titles" in jsPaper:
-            # if jsPaper["titles"]["title"] is dict:
-                # if jsPaper["titles"]["title"]["text"] is str:
-                     paper.title = jsPaper["titles"]["title"]#["text"]
-        if jsPaper["authors"]["author"] is dict:
+            if isinstance(jsPaper["titles"]["title"],dict):
+                if isinstance(jsPaper["titles"]["title"]["text"],str):
+                     paper.title = jsPaper["titles"]["title"]["text"]
+        paper.authors = []
+        if isinstance(jsPaper["authors"]["author"],list):
             for jsAuthor in jsPaper["authors"]["author"]:
                 author = Author()
                 author.lastname = jsAuthor["lastname"]
-                #parameters author
+                author.initials = jsAuthor["initials"]
+                if "affiliations" in jsAuthor:
+                    if isinstance(jsAuthor["affiliations"]["affiliation"], dict):
+                        author.affiliations = jsAuthor["affiliations"]["affiliation"]["orgname"]
                 paper.authors.append(author)
+        elif isinstance(jsPaper["authors"]["author"], dict):
+                jsAuthor = jsPaper["authors"]["author"]
+                author = Author()
+                author.lastname = jsAuthor["lastname"]
+                author.initials = jsAuthor["initials"]
+                if "affiliations" in jsAuthor:
+                    if isinstance(jsAuthor["affiliations"]["affiliation"], dict):
+                        author.affiliations = jsAuthor["affiliations"]["affiliation"]["orgname"]
+                paper.authors.append(author)
+        paper.keywords = []
+        if "keywords" in jsPaper:
+            if isinstance(jsPaper["keywords"]["keyword"], list):
+                for jsKeywords in jsPaper["keywords"]["keyword"]:
+                    keyword = jsKeywords["text"]
+                    paper.keywords.append(keyword)
+            elif isinstance(jsPaper["keywords"]["keyword"], dict):
+                jsKeywords = jsPaper["keywords"]["keyword"]
+                keyword = jsKeywords["text"]
+                paper.keywords.append(keyword)
+        paper.num_authors = len(paper.authors)
         papers.append(paper)
-    pprint.pprint(papers)
+        pprint.pprint(papers)
+    # print(len(papers))
     #  # scanDict(Author.lastname,js, "lastname") - 1 list
     # # scan2Dict(Paper.type, js, ["type"])
     # scan2Dict(Paper.year_publ, js, ["yearpubl"])
