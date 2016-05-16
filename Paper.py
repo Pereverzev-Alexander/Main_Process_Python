@@ -78,9 +78,9 @@ def scan2Dict(data_json, dct, keys):
 
 
 # перебор файлов в директории, path - ссылка на каждый файл
-dir_spin = r'C:\Users\Denis\Desktop\publications\spin'
-dir_scopus = r'C:\Users\Denis\Desktop\publications\scopus'
-dir_wos = r'C:\Users\Denis\Desktop\publications\wos'
+dir_spin = r'..\publications\spin'
+dir_scopus = r'..\publications\scopus'
+dir_wos = r'..\publications\wos'
 dirs_spin = os.listdir(dir_spin)
 dirs_scopus = os.listdir(dir_scopus)
 dirs_wos = os.listdir(dir_wos)
