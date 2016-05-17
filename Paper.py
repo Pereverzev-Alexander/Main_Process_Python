@@ -82,15 +82,31 @@ def scan2Dict(data_json, dct, keys):
         return
 
 
-def insert(table, columns, values):
-    conn_string = "host='localhost' dbname='db' user='postgres' password='pass'"
+# connect to db
+def connect2db(host_name, db_name, user_name, password):
+    conn_string = "host='" + host_name + "' dbname='" + db_name + "' user='" + user_name + "' password='" + password + "'"
     conn = psycopg2.connect(conn_string)
+    return conn
+
+
+# insert data to db
+def insert(table, columns, values, conn):
     cursor = conn.cursor()
     statement = '''INSERT INTO ''' + table + ''' (''' + columns + ''') VALUES (''' + values + ''')'''
     cursor.execute(statement)
     conn.commit()
     return
 
+
+# connect to db
+host_name = "localhost"
+db_name = "db"
+user_name = "postgres"
+password = "pass"
+table = "publication"
+columns = "id, title, authors, num_authors, range_pages, doi, year_publ, language, keywords"
+id_pub = 1
+conn = connect2db(host_name, db_name, user_name, password)
 
 # перебор файлов в директории, path - ссылка на каждый файл
 dir_spin = r'publications\spin'
@@ -101,9 +117,7 @@ dirs_scopus = os.listdir(dir_scopus)
 dirs_wos = os.listdir(dir_wos)
 data_json = []
 
-table = "publication"
-id_pub = 1
-columns = "id, title, authors, num_authors, range_pages, doi, year_publ, language, keywords"
+
 
 for x in dirs_spin:
     path = os.path.join(dir_spin, x)
@@ -166,13 +180,11 @@ for x in dirs_spin:
         papers.append(paper)
         # pprint.pprint(papers)
 
-
         if (id_pub < 50):
             if (int(paper.year_publ) < 1970):
                 paper.year_publ = 0
             else:
                 paper.year_publ = int(time.mktime(time.strptime(str(paper.year_publ) + "-01-01", '%Y-%m-%d')))
-            print(paper.title)
 
             paper.title = re.sub('(\")', '', paper.title)
             paper.title = re.sub('(\')', "", paper.title)
@@ -181,11 +193,12 @@ for x in dirs_spin:
             paper.keywords = re.sub('(\")', '', str(paper.keywords))
             paper.keywords = re.sub('(\')', "", str(paper.keywords))
 
-            values = str(id_pub) + ", '" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "'"
-            insert(table, columns, values)
+            values = str(id_pub) + ", '" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
+                paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(
+                paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "'"
+            insert(table, columns, values, conn)
+            print(id_pub)
             id_pub += 1
-
-
 
 for x in dirs_scopus:
     path = os.path.join(dir_scopus, x)
@@ -231,7 +244,7 @@ for x in dirs_scopus:
 
 
         if (id_pub < 100):
-            paper.year_publ = int(int(paper.year_publ)/1000)
+            paper.year_publ = int(int(paper.year_publ) / 1000)
 
             paper.title = re.sub('(\")', '', paper.title)
             paper.title = re.sub('(\')', "", paper.title)
@@ -240,8 +253,11 @@ for x in dirs_scopus:
             paper.keywords = re.sub('(\")', '', str(paper.keywords))
             paper.keywords = re.sub('(\')', "", str(paper.keywords))
 
-            values = str(id_pub) + ", '" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "'"
-            insert(table, columns, values)
+            values = str(id_pub) + ", '" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
+                paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(
+                paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "'"
+            insert(table, columns, values, conn)
+            print(id_pub)
             id_pub += 1
 
 for x in dirs_wos:
@@ -286,8 +302,9 @@ for x in dirs_wos:
                                     # write max index - newer (my opinion)
                                     if len_org >= 1:
                                         author.affiliations = \
-                                        jsAuthor["affiliations"][0]["address_spec"]["organizations"]["organization"][
-                                            len_org - 1]["text"]
+                                            jsAuthor["affiliations"][0]["address_spec"]["organizations"][
+                                                "organization"][
+                                                len_org - 1]["text"]
         paper.keywords = []
         if "keywords" in jsPaper:
             if isinstance(jsPaper["keywords"], list):
@@ -311,8 +328,11 @@ for x in dirs_wos:
             paper.keywords = re.sub('(\")', '', str(paper.keywords))
             paper.keywords = re.sub('(\')', "", str(paper.keywords))
 
-            values = str(id_pub) + ", '" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "'"
-            insert(table, columns, values)
+            values = str(id_pub) + ", '" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
+                paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(
+                paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "'"
+            insert(table, columns, values, conn)
+            print(id_pub)
             id_pub += 1
 
 # for x in dirs_scopus:
