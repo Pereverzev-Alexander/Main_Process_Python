@@ -104,8 +104,8 @@ db_name = "db"
 user_name = "postgres"
 password = "pass"
 table = "publication"
-columns = "id, title, authors, num_authors, range_pages, doi, year_publ, language, keywords"
-id_pub = 1
+columns = "title, authors, num_authors, range_pages, doi, year_publ, language, keywords"
+pub_count = 1
 conn = connect2db(host_name, db_name, user_name, password)
 
 # перебор файлов в директории, path - ссылка на каждый файл
@@ -180,7 +180,7 @@ for x in dirs_spin:
         papers.append(paper)
         # pprint.pprint(papers)
 
-        if (id_pub < 50):
+        if (pub_count < 50):
             if (int(paper.year_publ) < 1970):
                 paper.year_publ = 0
             else:
@@ -193,12 +193,12 @@ for x in dirs_spin:
             paper.keywords = re.sub('(\")', '', str(paper.keywords))
             paper.keywords = re.sub('(\')', "", str(paper.keywords))
 
-            values = str(id_pub) + ", '" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
+            values = "'" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
                 paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(
                 paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "'"
             insert(table, columns, values, conn)
-            print(id_pub)
-            id_pub += 1
+            print(pub_count)
+            pub_count += 1
 
 for x in dirs_scopus:
     path = os.path.join(dir_scopus, x)
@@ -243,7 +243,7 @@ for x in dirs_scopus:
         # pprint.pprint(papers)
 
 
-        if (id_pub < 100):
+        if (pub_count < 100):
             paper.year_publ = int(int(paper.year_publ) / 1000)
 
             paper.title = re.sub('(\")', '', paper.title)
@@ -253,12 +253,12 @@ for x in dirs_scopus:
             paper.keywords = re.sub('(\")', '', str(paper.keywords))
             paper.keywords = re.sub('(\')', "", str(paper.keywords))
 
-            values = str(id_pub) + ", '" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
+            values = "'" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
                 paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(
                 paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "'"
             insert(table, columns, values, conn)
-            print(id_pub)
-            id_pub += 1
+            print(pub_count)
+            pub_count += 1
 
 for x in dirs_wos:
     path = os.path.join(dir_wos, x)
@@ -314,7 +314,7 @@ for x in dirs_wos:
         # pprint.pprint(papers)
 
 
-        if (id_pub < 150):
+        if (pub_count < 150):
             tmp_year = int(paper.year_publ[0:4])
             if (tmp_year < 1970):
                 paper.year_publ = 0
@@ -328,12 +328,12 @@ for x in dirs_wos:
             paper.keywords = re.sub('(\")', '', str(paper.keywords))
             paper.keywords = re.sub('(\')', "", str(paper.keywords))
 
-            values = str(id_pub) + ", '" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
+            values = "'" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
                 paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(
                 paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "'"
             insert(table, columns, values, conn)
-            print(id_pub)
-            id_pub += 1
+            print(pub_count)
+            pub_count += 1
 
 # for x in dirs_scopus:
 #     path = os.path.join(dir_scopus, x)

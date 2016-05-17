@@ -11,7 +11,6 @@ CREATE DATABASE db
 #Create table:
 CREATE TABLE publication
 (
-  id integer NOT NULL,
   title character varying,
   authors character varying,
   num_authors integer,
@@ -20,7 +19,8 @@ CREATE TABLE publication
   keywords character varying(1000),
   range_pages character varying(20),
   year_publ character varying,
-  CONSTRAINT pub_id PRIMARY KEY (id)
+  id serial NOT NULL,
+  CONSTRAINT publication_pkey PRIMARY KEY (id)
 )
 WITH (
   OIDS=FALSE
