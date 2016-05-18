@@ -14,12 +14,13 @@ CREATE TABLE publication
   title character varying,
   authors character varying,
   num_authors integer,
-  doi character varying(255),
-  language character varying(10),
-  keywords character varying(1000),
-  range_pages character varying(20),
+  doi character varying,
+  language character varying,
+  keywords character varying,
+  range_pages character varying,
   year_publ character varying,
   id serial NOT NULL,
+  source character varying,
   CONSTRAINT publication_pkey PRIMARY KEY (id)
 )
 WITH (
