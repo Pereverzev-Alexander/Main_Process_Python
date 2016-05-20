@@ -4,6 +4,7 @@ import pprint
 import psycopg2
 import re
 import time
+import sys
 
 class Author:
     lastname = ""
@@ -123,8 +124,11 @@ for x in dirs_spin:
     data_file = open(path)
     data = data_file.read()
     js = json.loads(data)
+
     papers = []
+    counter = 0
     for jsPaper in js:
+        counter += 1
         paper = Paper()
         if "yearpubl" in jsPaper:
             paper.year_publ = jsPaper["yearpubl"]
@@ -178,7 +182,6 @@ for x in dirs_spin:
         paper.num_authors = len(paper.authors)
         papers.append(paper)
         # pprint.pprint(papers)
-
 
         if int(paper.year_publ) < 1970:
             paper.year_publ = 0
