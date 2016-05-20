@@ -5,7 +5,6 @@ import psycopg2
 import re
 import time
 
-
 class Author:
     lastname = ""
     initials = ""
