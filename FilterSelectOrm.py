@@ -41,6 +41,8 @@ class Publication(Model):
 
 
 # function to pefrorm select query
+# get all publications from given source: string database ("scopus")
+# and year withing year_min: int and year_max: int
 def db_select_year_range(year_min,year_max,source):
     pub_list = []
     for publication in Publication.select().where(Publication.source == source):
