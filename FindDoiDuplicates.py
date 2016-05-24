@@ -65,13 +65,40 @@ def insert_duplicate(p, dupl_p, dupl_list):
     insert_internal(dupl_p, d)
     dupl_list.append(d)
 
+
+def compare_pages(publication, list1, list2):
+    if publication.range_pages != "":
+        for comp_p in list1:
+            if comp_p.range_pages == publication.range_pages:
+                return comp_p
+        for comp_p in list2:
+            if comp_p.range_pages == publication.range_pages:
+                return comp_p
+    return None
+
+
+def compare_titles(publication, list1, list2):
+    if publication.title == "":
+        return None
+    for comp_p in list1:
+        if comp_p.title.lower() == publication.title.lower():
+            return comp_p
+    for comp_p in list2:
+        if comp_p.title.lower() == publication.title.lower():
+            return comp_p
+    return None
+
+
 # find all articles with same doi
 doi_dict = {}
 duplicates = []
+list_scopus = db_select_all("scopus")
+list_wos = db_select_all("wos")
+list_spin = db_select_all("spin")
 
 i = 0
 # insert all articles from scopus, use doi as key
-for p in db_select_all("scopus"):
+for p in list_scopus:
     i += 1
     print(i, len(duplicates))
     if p.doi == "":
@@ -79,10 +106,13 @@ for p in db_select_all("scopus"):
     doi_dict[p.doi] = p
 
 # try to insert articles from wos
-for p in db_select_all("wos"):
+for p in list_wos:
     i += 1
     print(i, len(duplicates))
     if p.doi == "":
+        c = compare_titles(p, list_scopus, list_spin)
+        if c is not None:
+            insert_duplicate(p, c, duplicates)
         continue
     if p.doi in doi_dict:
         insert_duplicate(p, doi_dict[p.doi], duplicates)
@@ -90,10 +120,13 @@ for p in db_select_all("wos"):
         doi_dict[p.doi] = p
 
 # try to insert articles from spin
-for p in db_select_all("spin"):
+for p in list_spin:
     i += 1
     print(i, len(duplicates))
     if p.doi == "":
+        c = compare_titles(p, list_scopus, list_wos)
+        if c is not None:
+            insert_duplicate(p, c, duplicates)
         continue
     if p.doi in doi_dict:
         insert_duplicate(p, doi_dict[p.doi], duplicates)
