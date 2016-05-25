@@ -1,10 +1,8 @@
 import json
 import os
-import pprint
 import psycopg2
 import re
 import time
-import sys
 
 class Author:
     lastname = ""
@@ -102,7 +100,7 @@ def insert(table, columns, values, conn):
 host_name = "localhost"
 db_name = "db"
 user_name = "postgres"
-password = "pass"
+password = "admin"
 table = "publication"
 columns = "title, authors, num_authors, range_pages, doi, year_publ, language, keywords, source"
 pub_count = 1
@@ -327,47 +325,3 @@ for x in dirs_wos:
         insert(table, columns, values, conn)
         print(pub_count)
         pub_count += 1
-
-# for x in dirs_scopus:
-#     path = os.path.join(dir_scopus, x)
-#     data_file = open(path);
-#     data = data_file.read()
-#     js = json.loads(data)
-#     # scanDict(Paper.type, js, "sourceType")
-#     scanDict(Paper.year_publ, js, "pubDate")
-#     scanDict(Paper.range_pages, js, "pageRange")
-#
-#     author = Author()
-#     scanDictSplit(Author.lastname,js, "name")
-#
-#     # pprint.pprint(Author.lastname)
-#     # print(len(Author.lastname))
-#     data_file.close()
-
-# for x in dirs_wos:
-#     path = os.path.join(dir_wos, x)
-#     data_file = open(path);
-#     data = data_file.read()
-#     js = json.loads(data)
-#     scanDict(Author.lastname,js, "last_name")
-#     scanDict(Paper.type, js, "heading")
-#     scanDict(Paper.year_publ, js, "pub_date")
-#     scanDict(Paper.range_pages, js, "page_range")
-#     # pprint.pprint(Author.lastname)
-#     # print(len(Author.lastname))
-#     data_file.close()
-
-# open json file
-# data_file = open(jsonNameSPIN)
-# data = data_file.read()
-# js = json.loads(data)
-
-# search keys
-# pprint.pprint(js[0].keys())
-# # pprint.pprint(js[1].keys())
-# for key, value in js[0]["authors"]["author"][0].items():
-#     print(key)
-#     #print(key, value)
-
-# lastname = scanDict(js, "lastname")
-# pprint.pprint(data_json)
