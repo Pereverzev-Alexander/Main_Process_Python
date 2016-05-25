@@ -233,6 +233,32 @@ for x in dirs_scopus:
                         if len(jsAuthor["affiliations"]) >= 1:
                             author.affiliations = jsAuthor["affiliations"][0]
                 paper.authors.append(author)
+        if isinstance(jsPaper["authors"]["external"], list):
+            for jsAuthor in jsPaper["authors"]["external"]:
+                author = Author()
+                author.lastname = jsAuthor["name"].split()[0]
+                if len(jsAuthor["name"].split()) > 1:
+                    author.initials = jsAuthor["name"].split()[1]
+                else:
+                    author.initials = "_"
+                if "affiliations" in jsAuthor:
+                    if isinstance(jsAuthor["affiliations"], list):
+                        if len(jsAuthor["affiliations"]) >= 1:
+                            author.affiliations = jsAuthor["affiliations"][0]
+                paper.authors.append(author)
+        if isinstance(jsPaper["authors"]["unknownInternal"], list):
+            for jsAuthor in jsPaper["authors"]["unknownInternal"]:
+                author = Author()
+                author.lastname = jsAuthor["name"].split()[0]
+                if len(jsAuthor["name"].split()) > 1:
+                    author.initials = jsAuthor["name"].split()[1]
+                else:
+                    author.initials = "_"
+                if "affiliations" in jsAuthor:
+                    if isinstance(jsAuthor["affiliations"], list):
+                        if len(jsAuthor["affiliations"]) >= 1:
+                            author.affiliations = jsAuthor["affiliations"][0]
+                paper.authors.append(author)
         paper.keywords = []
         if "keywords" in jsPaper:
             keyword = jsPaper["keywords"]
