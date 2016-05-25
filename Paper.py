@@ -3,6 +3,8 @@ import os
 import psycopg2
 import re
 import time
+import pprint
+import datetime
 
 class Author:
     lastname = ""
@@ -130,6 +132,10 @@ for x in dirs_spin:
         paper = Paper()
         if "yearpubl" in jsPaper:
             paper.year_publ = jsPaper["yearpubl"]
+        elif "source" in jsPaper:
+            if isinstance(jsPaper["source"]["issue"], dict):
+                jsYear = jsPaper["source"]["issue"]
+                paper.year_publ = int(jsYear["year"])
         if "language" in jsPaper:
             paper.language = jsPaper["language"]
         if "pages" in jsPaper:
@@ -181,10 +187,10 @@ for x in dirs_spin:
         papers.append(paper)
         # pprint.pprint(papers)
 
-        if int(paper.year_publ) < 1970:
-            paper.year_publ = 0
-        else:
-            paper.year_publ = int(time.mktime(time.strptime(str(paper.year_publ) + "-01-01", '%Y-%m-%d')))
+        # if int(paper.year_publ) < 1970:
+        #     paper.year_publ = 0
+        # else:
+        #     paper.year_publ = int(time.mktime(time.strptime(str(paper.year_publ) + "-01-01", '%Y-%m-%d')))
         paper.title = re.sub('(\")', '', paper.title)
         paper.title = re.sub('(\')', "", paper.title)
         paper.authors = re.sub('(\")', '', str(paper.authors))
@@ -209,6 +215,12 @@ for x in dirs_scopus:
         paper = Paper()
         if "pubDate" in jsPaper:
             paper.year_publ = jsPaper["pubDate"]
+            if paper.year_publ >= 0:
+                normal_date = datetime.datetime.fromtimestamp(paper.year_publ/1000)
+                paper.year_publ = normal_date.year
+            if paper.year_publ < 0:
+                normal_date = datetime.datetime.fromtimestamp(-paper.year_publ / 1000)
+                paper.year_publ = 1970 - (normal_date.year - 1970)
         if "language" in jsPaper:
             paper.language = jsPaper["language"]
         if "pageRange" in jsPaper:
@@ -267,7 +279,6 @@ for x in dirs_scopus:
         papers.append(paper)
         # pprint.pprint(papers)
 
-        paper.year_publ = int(int(paper.year_publ) / 1000)
         paper.title = re.sub('(\")', '', paper.title)
         paper.title = re.sub('(\')', "", paper.title)
         paper.authors = re.sub('(\")', '', str(paper.authors))
@@ -290,7 +301,7 @@ for x in dirs_wos:
     for jsPaper in js:
         paper = Paper()
         if "pub_date" in jsPaper:
-            paper.year_publ = jsPaper["pub_date"]
+            paper.year_publ = int(jsPaper["pub_date"][0:4])
         if "static_data" in jsPaper:
             if isinstance(jsPaper["static_data"]["fullrecord_metadata"], dict):
                 if isinstance(jsPaper["static_data"]["fullrecord_metadata"]["languages"]["language"], dict):
@@ -334,11 +345,11 @@ for x in dirs_wos:
         papers.append(paper)
         # pprint.pprint(papers)
 
-        tmp_year = int(paper.year_publ[0:4])
-        if (tmp_year < 1970):
-            paper.year_publ = 0
-        else:
-            paper.year_publ = int(time.mktime(time.strptime(str(paper.year_publ), '%Y-%m-%d')))
+
+        # if (tmp_year < 1970):
+        #     paper.year_publ = 0
+        # else:
+        #     paper.year_publ = int(time.mktime(time.strptime(str(paper.year_publ), '%Y-%m-%d')))
         paper.title = re.sub('(\")', '', paper.title)
         paper.title = re.sub('(\')', "", paper.title)
         paper.authors = re.sub('(\")', '', str(paper.authors))
