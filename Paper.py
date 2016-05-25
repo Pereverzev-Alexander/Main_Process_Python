@@ -1,50 +1,54 @@
 import json
 import os
 import pprint
+import psycopg2
+import re
+import time
+
 
 class Author:
-        lastname = ""
-        initials = ""
-        affiliations = ""
+    lastname = ""
+    initials = ""
+    affiliations = ""
 
-        def __repr__(self):
-            return str(self.lastname) + " " + str(self.initials) + " " + str(self.affiliations)
+    def __repr__(self):
+        return str(self.lastname) + " " + str(self.initials) + " " + str(self.affiliations)
 
         # def __init__(self, par1, par2, par3):
         #     self.lastname = par1
         #     super().__init__()
 
+
 class Paper:
-        # id= []
-        #type = []
-        language = ""
-        year_publ = 0
-        range_pages = ""
-        title = ""
-        keywords = []
-        doi = 0
-        num_authors = 0
-        authors = [] #from Author
+    # id= []
+    # type = []
+    language = ""
+    year_publ = 0
+    range_pages = ""
+    title = ""
+    keywords = []
+    doi = 0
+    num_authors = 0
+    authors = []  # from Author
+
+    def __repr__(self):
+        return str(self.keywords) + " " + str(self.year_publ) + " " + str(self.doi) + " " + str(
+            self.authors) + " " + str(self.title) + " " + str(self.language) + " " + str(self.num_authors)
 
 
-        def __repr__(self):
-            return str(self.keywords) + " " + str(self.year_publ) + " " + str(self.doi) + " " + str(self.authors) + " " + str(self.title)+ " " + str(self.language)+ " " + str(self.num_authors)
-
-
-
-def scanDict(data_json,dct, key):
-            if isinstance(dct, dict):
-                if key in dct.keys():
-                    data_json.append(dct[key])
-                    return
-                else:
-                    for x in dct.values():
-                        scanDict(data_json,x, key)
-            elif isinstance(dct, list):
-                for x in dct:
-                    scanDict(data_json,x, key)
-            else:
-                return
+def scanDict(data_json, dct, key):
+    if isinstance(dct, dict):
+        if key in dct.keys():
+            data_json.append(dct[key])
+            return
+        else:
+            for x in dct.values():
+                scanDict(data_json, x, key)
+    elif isinstance(dct, list):
+        for x in dct:
+            scanDict(data_json, x, key)
+    else:
+        return
 
 
 def scanDictSplit(data_json, dct, key):
@@ -60,6 +64,7 @@ def scanDictSplit(data_json, dct, key):
             scanDictSplit(data_json, x, key)
     else:
         return
+
 
 def scan2Dict(data_json, dct, keys):
     if isinstance(dct, dict):
@@ -77,6 +82,32 @@ def scan2Dict(data_json, dct, keys):
         return
 
 
+# connect to db
+def connect2db(host_name, db_name, user_name, password):
+    conn_string = "host='" + host_name + "' dbname='" + db_name + "' user='" + user_name + "' password='" + password + "'"
+    conn = psycopg2.connect(conn_string)
+    return conn
+
+
+# insert data to db
+def insert(table, columns, values, conn):
+    cursor = conn.cursor()
+    statement = '''INSERT INTO ''' + table + ''' (''' + columns + ''') VALUES (''' + values + ''')'''
+    cursor.execute(statement)
+    conn.commit()
+    return
+
+
+# connect to db
+host_name = "localhost"
+db_name = "db"
+user_name = "postgres"
+password = "12345"
+table = "publication"
+columns = "title, authors, num_authors, range_pages, doi, year_publ, language, keywords, source"
+pub_count = 1
+conn = connect2db(host_name, db_name, user_name, password)
+
 # перебор файлов в директории, path - ссылка на каждый файл
 dir_spin = r'publications\spin'
 dir_scopus = r'publications\scopus'
@@ -85,6 +116,8 @@ dirs_spin = os.listdir(dir_spin)
 dirs_scopus = os.listdir(dir_scopus)
 dirs_wos = os.listdir(dir_wos)
 data_json = []
+
+
 
 for x in dirs_spin:
     path = os.path.join(dir_spin, x)
@@ -95,7 +128,7 @@ for x in dirs_spin:
     for jsPaper in js:
         paper = Paper()
         if "yearpubl" in jsPaper:
-                paper.year_publ=jsPaper["yearpubl"]
+            paper.year_publ = jsPaper["yearpubl"]
         if "language" in jsPaper:
             paper.language = jsPaper["language"]
         if "pages" in jsPaper:
@@ -106,11 +139,11 @@ for x in dirs_spin:
                 if jsDoi["type"] == "DOI":
                     paper.doi = jsDoi["text"]
         if "titles" in jsPaper:
-            if isinstance(jsPaper["titles"]["title"],dict):
-                if isinstance(jsPaper["titles"]["title"]["text"],str):
-                     paper.title = jsPaper["titles"]["title"]["text"]
+            if isinstance(jsPaper["titles"]["title"], dict):
+                if isinstance(jsPaper["titles"]["title"]["text"], str):
+                    paper.title = jsPaper["titles"]["title"]["text"]
         paper.authors = []
-        if isinstance(jsPaper["authors"]["author"],list):
+        if isinstance(jsPaper["authors"]["author"], list):
             for jsAuthor in jsPaper["authors"]["author"]:
                 author = Author()
                 author.lastname = jsAuthor["lastname"]
@@ -122,16 +155,16 @@ for x in dirs_spin:
                             author.affiliations = jsAuthor["affiliations"]["affiliation"]["orgname"]
                 paper.authors.append(author)
         elif isinstance(jsPaper["authors"]["author"], dict):
-                jsAuthor = jsPaper["authors"]["author"]
-                author = Author()
-                author.lastname = jsAuthor["lastname"]
-                if "initials" in jsAuthor:
-                    author.initials = jsAuthor["initials"]
-                if "affiliations" in jsAuthor:
-                    if isinstance(jsAuthor["affiliations"]["affiliation"], dict):
-                        if "orgname" in jsAuthor["affiliations"]["affiliation"]:
-                            author.affiliations = jsAuthor["affiliations"]["affiliation"]["orgname"]
-                paper.authors.append(author)
+            jsAuthor = jsPaper["authors"]["author"]
+            author = Author()
+            author.lastname = jsAuthor["lastname"]
+            if "initials" in jsAuthor:
+                author.initials = jsAuthor["initials"]
+            if "affiliations" in jsAuthor:
+                if isinstance(jsAuthor["affiliations"]["affiliation"], dict):
+                    if "orgname" in jsAuthor["affiliations"]["affiliation"]:
+                        author.affiliations = jsAuthor["affiliations"]["affiliation"]["orgname"]
+            paper.authors.append(author)
         paper.keywords = []
         if "keywords" in jsPaper:
             if isinstance(jsPaper["keywords"]["keyword"], list):
@@ -146,6 +179,24 @@ for x in dirs_spin:
         paper.num_authors = len(paper.authors)
         papers.append(paper)
         # pprint.pprint(papers)
+
+
+        if int(paper.year_publ) < 1970:
+            paper.year_publ = 0
+        else:
+            paper.year_publ = int(time.mktime(time.strptime(str(paper.year_publ) + "-01-01", '%Y-%m-%d')))
+        paper.title = re.sub('(\")', '', paper.title)
+        paper.title = re.sub('(\')', "", paper.title)
+        paper.authors = re.sub('(\")', '', str(paper.authors))
+        paper.authors = re.sub('(\')', "", str(paper.authors))
+        paper.keywords = re.sub('(\")', '', str(paper.keywords))
+        paper.keywords = re.sub('(\')', "", str(paper.keywords))
+        values = "'" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
+            paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(
+            paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "', 'spin'"
+        insert(table, columns, values, conn)
+        print(pub_count)
+        pub_count += 1
 
 
 for x in dirs_scopus:
@@ -171,7 +222,7 @@ for x in dirs_scopus:
             elif "titleRu" in jsPaper:
                 paper.title = jsPaper["titleRu"]
         paper.authors = []
-        #maybe have more authers such as student, unkonownInternal
+        # maybe have more authers such as student, unkonownInternal
         if isinstance(jsPaper["authors"]["employee"], list):
             for jsAuthor in jsPaper["authors"]["employee"]:
                 author = Author()
@@ -182,6 +233,34 @@ for x in dirs_scopus:
                         if len(jsAuthor["affiliations"]) >= 1:
                             author.affiliations = jsAuthor["affiliations"][0]
                 paper.authors.append(author)
+        if isinstance(jsPaper["authors"]["external"], list):
+            for jsAuthor in jsPaper["authors"]["external"]:
+                author = Author()
+                author.lastname = jsAuthor["name"].split()[0]
+                if len(jsAuthor["name"].split())>1:
+                    author.initials = jsAuthor["name"].split()[1]
+                else:
+                    author.initials ="_"
+                if "affiliations" in jsAuthor:
+                    if isinstance(jsAuthor["affiliations"], list):
+                        if len(jsAuthor["affiliations"]) >= 1:
+                            author.affiliations = jsAuthor["affiliations"][0]
+                paper.authors.append(author)
+        if isinstance(jsPaper["authors"]["unknownInternal"], list):
+            for jsAuthor in jsPaper["authors"]["unknownInternal"]:
+                author = Author()
+                author.lastname = jsAuthor["name"].split()[0]
+                if len(jsAuthor["name"].split()) > 1:
+                    author.initials = jsAuthor["name"].split()[1]
+                else:
+                    author.initials = "_"
+                if "affiliations" in jsAuthor:
+                    if isinstance(jsAuthor["affiliations"], list):
+                        if len(jsAuthor["affiliations"]) >= 1:
+                            author.affiliations = jsAuthor["affiliations"][0]
+                paper.authors.append(author)
+
+
         paper.keywords = []
         if "keywords" in jsPaper:
             keyword = jsPaper["keywords"]
@@ -190,6 +269,19 @@ for x in dirs_scopus:
         papers.append(paper)
         # pprint.pprint(papers)
 
+        paper.year_publ = int(int(paper.year_publ) / 1000)
+        paper.title = re.sub('(\")', '', paper.title)
+        paper.title = re.sub('(\')', "", paper.title)
+        paper.authors = re.sub('(\")', '', str(paper.authors))
+        paper.authors = re.sub('(\')', "", str(paper.authors))
+        paper.keywords = re.sub('(\")', '', str(paper.keywords))
+        paper.keywords = re.sub('(\')', "", str(paper.keywords))
+        values = "'" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
+            paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(
+            paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "', 'scopus'"
+        insert(table, columns, values, conn)
+        print(pub_count)
+        pub_count += 1
 
 for x in dirs_wos:
     path = os.path.join(dir_wos, x)
@@ -200,7 +292,7 @@ for x in dirs_wos:
     for jsPaper in js:
         paper = Paper()
         if "pub_date" in jsPaper:
-                paper.year_publ=jsPaper["pub_date"]
+            paper.year_publ = jsPaper["pub_date"]
         if "static_data" in jsPaper:
             if isinstance(jsPaper["static_data"]["fullrecord_metadata"], dict):
                 if isinstance(jsPaper["static_data"]["fullrecord_metadata"]["languages"]["language"], dict):
@@ -213,7 +305,7 @@ for x in dirs_wos:
         if "title_en" in jsPaper:
             paper.title = jsPaper["title_en"]
         paper.authors = []
-        if isinstance(jsPaper["authors"],list):
+        if isinstance(jsPaper["authors"], list):
             if len(jsPaper["authors"]) >= 1:
                 for jsAuthor in jsPaper["authors"]:
                     author = Author()
@@ -225,18 +317,42 @@ for x in dirs_wos:
                     if "affiliations" in jsPaper:
                         if len(jsAuthor["affiliations"]) > 0:
                             if "address_spec" in jsAuthor["affiliations"][0]:
-                                if isinstance(jsAuthor["affiliations"][0]["address_spec"]["organizations"]["organization"], list):
-                                    len_org = len(jsAuthor["affiliations"][0]["address_spec"]["organizations"]["organization"])
+                                if isinstance(
+                                        jsAuthor["affiliations"][0]["address_spec"]["organizations"]["organization"],
+                                        list):
+                                    len_org = len(
+                                        jsAuthor["affiliations"][0]["address_spec"]["organizations"]["organization"])
                                     # write max index - newer (my opinion)
                                     if len_org >= 1:
-                                        author.affiliations = jsAuthor["affiliations"][0]["address_spec"]["organizations"]["organization"][len_org-1]["text"]
+                                        author.affiliations = \
+                                            jsAuthor["affiliations"][0]["address_spec"]["organizations"][
+                                                "organization"][
+                                                len_org - 1]["text"]
         paper.keywords = []
         if "keywords" in jsPaper:
             if isinstance(jsPaper["keywords"], list):
-                    paper.keywords = jsPaper["keywords"]
+                paper.keywords = jsPaper["keywords"]
         paper.num_authors = len(paper.authors)
         papers.append(paper)
         # pprint.pprint(papers)
+
+        tmp_year = int(paper.year_publ[0:4])
+        if (tmp_year < 1970):
+            paper.year_publ = 0
+        else:
+            paper.year_publ = int(time.mktime(time.strptime(str(paper.year_publ), '%Y-%m-%d')))
+        paper.title = re.sub('(\")', '', paper.title)
+        paper.title = re.sub('(\')', "", paper.title)
+        paper.authors = re.sub('(\")', '', str(paper.authors))
+        paper.authors = re.sub('(\')', "", str(paper.authors))
+        paper.keywords = re.sub('(\")', '', str(paper.keywords))
+        paper.keywords = re.sub('(\')', "", str(paper.keywords))
+        values = "'" + str(paper.title) + "', '" + str(paper.authors) + "', " + str(
+            paper.num_authors) + ", '" + str(paper.range_pages) + "', '" + str(paper.doi) + "', '" + str(
+            paper.year_publ) + "', '" + str(paper.language) + "','" + str(paper.keywords) + "', 'wos'"
+        insert(table, columns, values, conn)
+        print(pub_count)
+        pub_count += 1
 
 # for x in dirs_scopus:
 #     path = os.path.join(dir_scopus, x)
@@ -272,7 +388,7 @@ for x in dirs_wos:
 # data = data_file.read()
 # js = json.loads(data)
 
-#search keys
+# search keys
 # pprint.pprint(js[0].keys())
 # # pprint.pprint(js[1].keys())
 # for key, value in js[0]["authors"]["author"][0].items():
@@ -281,7 +397,3 @@ for x in dirs_wos:
 
 # lastname = scanDict(js, "lastname")
 # pprint.pprint(data_json)
-
-
-
-
