@@ -83,7 +83,7 @@ def db_select_year_range(year_min, year_max, source):
 # function to perform select query
 # get all publications without doi and
 # publications that do not coincide on doi
-def db_select_DOI_publ():
+def db_select_notDOI_publication():
     pub_list = []
     for publication in Publication.select().where(Publication.doi.not_in(Publication.select(
             Publication.doi).where((Publication.doi != '0') & (Publication.doi != 'None')).group_by(
@@ -95,7 +95,7 @@ def db_select_DOI_publ():
 # #test function
 
 # #test function
-# listPub = db_select_DOI_publ()
+# listPub = db_select_notDOI_publication()
 # for p in listPub:
 #      print(p.year_publ+" "+p.doi)
 # print("Count publications " + str(len(listPub)))
