@@ -8,7 +8,7 @@ from peewee import *
 db = PostgresqlDatabase(
     'db',  # Required by Peewee.
     user='postgres',  # Will be passed directly to psycopg2.
-    password='pass',
+    password='admin',
     host='localhost',
 )
 
@@ -79,6 +79,26 @@ def db_select_year_range(year_min, year_max, source):
 # #test function
 # for p in db_select_year_range(1970,2010,"scopus"):
 #     print(p.year_publ+" "+p.title)
+
+# function to perform select query
+# get all publications without doi and
+# publications that do not coincide on doi
+def db_select_DOI_publ():
+    pub_list = []
+    for publication in Publication.select().where(Publication.doi.not_in(Publication.select(
+            Publication.doi).where((Publication.doi != '0') & (Publication.doi != 'None')).group_by(
+            Publication.doi).having(fn.Count('*') > 1))):
+        #normalize
+        normalize_publication(publication)
+        pub_list.append(publication)
+    return pub_list
+# #test function
+
+# #test function
+# listPub = db_select_DOI_publ()
+# for p in listPub:
+#      print(p.year_publ+" "+p.doi)
+# print("Count publications " + str(len(listPub)))
 
 
 # select all articles from source
