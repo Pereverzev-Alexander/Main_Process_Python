@@ -32,7 +32,7 @@ class Publication(Model):
     language = CharField()
     keywords = CharField()
     range_pages = CharField()
-    year_publ = CharField()
+    year_publ = IntegerField()
     id = PrimaryKeyField()
     source = CharField()
 
@@ -68,17 +68,15 @@ def get_publication_year(publication):
 # and year withing year_min: int and year_max: int
 def db_select_year_range(year_min, year_max, source):
     pub_list = []
-    for publication in Publication.select().where(Publication.source == source):
-        year = get_publication_year(publication)
-        if year >= year_min and year <= year_max :
-            #normalize
-            normalize_publication(publication)
-            pub_list.append(publication)
+    for publication in Publication.select().where(Publication.source == source and
+                                                  year_min <= Publication.year_publ <= year_max):
+        normalize_publication(publication)
+        pub_list.append(publication)
     return pub_list
 
-# #test function
-# for p in db_select_year_range(1970,2010,"scopus"):
-#     print(p.year_publ+" "+p.title)
+# test function
+for p in db_select_year_range(1970, 1980, "scopus"):
+    print(str(p.year_publ)+" "+p.title)
 
 # function to perform select query
 # get all publications without doi and
