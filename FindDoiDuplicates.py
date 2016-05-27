@@ -89,60 +89,60 @@ def compare_titles(publication, list1, list2):
     return None
 
 
-# find all articles with same doi
-doi_dict = {}
-duplicates = []
-list_scopus = db_select_all("scopus")
-list_wos = db_select_all("wos")
-list_spin = db_select_all("spin")
-
-i = 0
-# insert all articles from scopus, use doi as key
-for p in list_scopus:
-    i += 1
-    print(i, len(duplicates))
-    if p.doi == "":
-        continue
-    doi_dict[p.doi] = p
-
-# try to insert articles from wos
-for p in list_wos:
-    i += 1
-    print(i, len(duplicates))
-    if p.doi == "":
-        c = compare_titles(p, list_scopus, list_spin)
-        if c is not None:
-            insert_duplicate(p, c, duplicates)
-        continue
-    if p.doi in doi_dict:
-        insert_duplicate(p, doi_dict[p.doi], duplicates)
-    else:
-        doi_dict[p.doi] = p
-
-# try to insert articles from spin
-for p in list_spin:
-    i += 1
-    print(i, len(duplicates))
-    if p.doi == "":
-        c = compare_titles(p, list_scopus, list_wos)
-        if c is not None:
-            insert_duplicate(p, c, duplicates)
-        continue
-    if p.doi in doi_dict:
-        insert_duplicate(p, doi_dict[p.doi], duplicates)
-    else:
-        doi_dict[p.doi] = p
-
-
-# test
-print("\nFound total  DOI duplicates: "+str(len(duplicates)))
-count_double = 0
-count_triple = 0
-for d in duplicates:
-    c = d.count_instances()
-    if c == 2:
-        count_double += 1
-    if c == 3:
-        count_triple += 1
-
-print("In 2 databases: "+str(count_double)+", In 3 databases: "+str(count_triple)+", Total: "+str(count_double+count_triple))
+# # find all articles with same doi
+# doi_dict = {}
+# duplicates = []
+# list_scopus = db_select_all("scopus")
+# list_wos = db_select_all("wos")
+# list_spin = db_select_all("spin")
+#
+# i = 0
+# # insert all articles from scopus, use doi as key
+# for p in list_scopus:
+#     i += 1
+#     print(i, len(duplicates))
+#     if p.doi == "":
+#         continue
+#     doi_dict[p.doi] = p
+#
+# # try to insert articles from wos
+# for p in list_wos:
+#     i += 1
+#     print(i, len(duplicates))
+#     if p.doi == "":
+#         c = compare_titles(p, list_scopus, list_spin)
+#         if c is not None:
+#             insert_duplicate(p, c, duplicates)
+#         continue
+#     if p.doi in doi_dict:
+#         insert_duplicate(p, doi_dict[p.doi], duplicates)
+#     else:
+#         doi_dict[p.doi] = p
+#
+# # try to insert articles from spin
+# for p in list_spin:
+#     i += 1
+#     print(i, len(duplicates))
+#     if p.doi == "":
+#         c = compare_titles(p, list_scopus, list_wos)
+#         if c is not None:
+#             insert_duplicate(p, c, duplicates)
+#         continue
+#     if p.doi in doi_dict:
+#         insert_duplicate(p, doi_dict[p.doi], duplicates)
+#     else:
+#         doi_dict[p.doi] = p
+#
+#
+# # test
+# print("\nFound total  DOI duplicates: "+str(len(duplicates)))
+# count_double = 0
+# count_triple = 0
+# for d in duplicates:
+#     c = d.count_instances()
+#     if c == 2:
+#         count_double += 1
+#     if c == 3:
+#         count_triple += 1
+#
+# print("In 2 databases: "+str(count_double)+", In 3 databases: "+str(count_triple)+", Total: "+str(count_double+count_triple))
