@@ -24,7 +24,7 @@ class Paper:
     # type = []
     language = ""
     year_publ = 0
-    range_pages = ""
+    range_pages = 0
     title = ""
     keywords = []
     doi = 0
@@ -81,6 +81,12 @@ def scan2Dict(data_json, dct, keys):
     else:
         return
 
+def IsInt(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
 
 # connect to db
 def connect2db(host_name, db_name, user_name, password):
@@ -139,7 +145,15 @@ for x in dirs_spin:
         if "language" in jsPaper:
             paper.language = jsPaper["language"]
         if "pages" in jsPaper:
-            paper.range_pages = jsPaper["pages"]
+            range_pages_str = ""
+            range_pages_str = jsPaper["pages"]
+            if len(range_pages_str.split("-")) == 2:
+                range_pages_only_int0 = re.sub(r"\D", "", range_pages_str.split("-")[0]);
+                range_pages_only_int1 = re.sub(r"\D", "", range_pages_str.split("-")[1]);
+                # if IsInt(range_pages_str.split("-")[0]) and IsInt(range_pages_str.split("-")[1]):
+                paper.range_pages = int(range_pages_only_int1) - int(range_pages_only_int0) + 1
+            elif len(range_pages_str.split("-")) == 1:
+                paper.range_pages == 1;
         if "codes" in jsPaper:
             if isinstance(jsPaper["codes"]["code"], dict):
                 jsDoi = jsPaper["codes"]["code"]
@@ -224,7 +238,17 @@ for x in dirs_scopus:
         if "language" in jsPaper:
             paper.language = jsPaper["language"]
         if "pageRange" in jsPaper:
-            paper.range_pages = jsPaper["pageRange"]
+            range_pages_str = ""
+            range_pages_str = jsPaper["pageRange"]
+            if range_pages_str is not None:
+                    if len(range_pages_str.split("-")) == 2:
+                        range_pages_only_int0 = re.sub(r"\D", "", range_pages_str.split("-")[0]);
+                        range_pages_only_int1 = re.sub(r"\D", "", range_pages_str.split("-")[1]);
+                        # if IsInt(range_pages_str.split("-")[0]) and IsInt(range_pages_str.split("-")[1]):
+                        if IsInt(range_pages_only_int0) and IsInt(range_pages_only_int1):
+                            paper.range_pages = int(range_pages_only_int1) - int(range_pages_only_int0) + 1
+                    elif len(range_pages_str.split("-")) == 1:
+                        paper.range_pages == 1;
         if "doi" in jsPaper:
             paper.doi = jsPaper["doi"]
         if "titleEn" in jsPaper:
@@ -308,7 +332,17 @@ for x in dirs_wos:
                     if isinstance(jsPaper["static_data"]["fullrecord_metadata"]["languages"]["language"], dict):
                         paper.language = jsPaper["static_data"]["fullrecord_metadata"]["languages"]["language"]["text"]
         if "page_range" in jsPaper:
-            paper.range_pages = jsPaper["page_range"]
+            range_pages_str = ""
+            range_pages_str = jsPaper["page_range"]
+            if range_pages_str is not None:
+                    if len(range_pages_str.split("-")) == 2:
+                        range_pages_only_int0 = re.sub(r"\D", "", range_pages_str.split("-")[0]);
+                        range_pages_only_int1 = re.sub(r"\D", "", range_pages_str.split("-")[1]);
+                        # if IsInt(range_pages_str.split("-")[0]) and IsInt(range_pages_str.split("-")[1]):
+                        if IsInt(range_pages_only_int0) and IsInt(range_pages_only_int1):
+                            paper.range_pages = int(range_pages_only_int1) - int(range_pages_only_int0) + 1
+                    elif len(range_pages_str.split("-")) == 1:
+                        paper.range_pages == 1;
         if "doi" in jsPaper:
             paper.doi = jsPaper["doi"]
         if "title_en" in jsPaper:
@@ -334,9 +368,7 @@ for x in dirs_wos:
                                     # write max index - newer (my opinion)
                                     if len_org >= 1:
                                         author.affiliations = \
-                                            jsAuthor["affiliations"][0]["address_spec"]["organizations"][
-                                                "organization"][
-                                                len_org - 1]["text"]
+                                            jsAuthor["affiliations"][0]["address_spec"]["organizations"]["organization"][len_org - 1]["text"]
         paper.keywords = []
         if "keywords" in jsPaper:
             if isinstance(jsPaper["keywords"], list):
