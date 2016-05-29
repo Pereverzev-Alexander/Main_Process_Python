@@ -18,7 +18,7 @@ CREATE TABLE publication
   language character varying,
   keywords character varying,
   range_pages character varying,
-  year_publ character varying,
+  year_publ integer,
   id serial NOT NULL,
   source character varying,
   CONSTRAINT publication_pkey PRIMARY KEY (id)

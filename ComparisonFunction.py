@@ -1,5 +1,6 @@
 from FilterSelectOrm import db_select_year_range
 
+
 # find articles with the same count author
 def find_same_num_authors(year_min, year_max, source1, source2):
     lst = []
@@ -10,6 +11,7 @@ def find_same_num_authors(year_min, year_max, source1, source2):
             if p1.num_authors == p2.num_authors:
                 lst.append((p1,p2))
     return lst
+
 
 # returns all articles published within given range
 # from given sources with same pages range
