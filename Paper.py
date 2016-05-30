@@ -246,7 +246,10 @@ for x in dirs_scopus:
                         range_pages_only_int1 = re.sub(r"\D", "", range_pages_str.split("-")[1]);
                         # if IsInt(range_pages_str.split("-")[0]) and IsInt(range_pages_str.split("-")[1]):
                         if IsInt(range_pages_only_int0) and IsInt(range_pages_only_int1):
-                            paper.range_pages = int(range_pages_only_int1) - int(range_pages_only_int0) + 1
+                            if 0 < int(range_pages_only_int0) < 4294967295 and 0 < int(range_pages_only_int1) < 4294967295:
+                                paper.range_pages = int(range_pages_only_int1) - int(range_pages_only_int0) + 1
+                            else:
+                                paper.range_pages = int(1)
                     elif len(range_pages_str.split("-")) == 1:
                         paper.range_pages == 1;
         if "doi" in jsPaper:
