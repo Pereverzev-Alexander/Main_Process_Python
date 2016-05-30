@@ -97,6 +97,12 @@ def equals_doi(p1,p2):
     return p1.doi == p2.doi
 
 
+def internal_compare_titles(title1,title2):
+    t1 = title1.lower().replace('.' ,'').replace(',', '').replace('-', '').replace(':', '')
+    t2 = title2.lower().replace('.', '').replace(',', '').replace('-', '').replace(':', '')
+    return t1 == t2
+
+
 def internal_compare_publications(p, comp):
     if equals_doi(p, comp):
         return True
@@ -112,9 +118,12 @@ def internal_compare_publications(p, comp):
                     len_diff = -len_diff
                 if len_diff > 10:
                     return False
-                r = fuzz.ratio(p.title,comp.title)
-                if r > 90:
-                    return True
+                # r = fuzz.ratio(p.title,comp.title)
+                # if r > 90:
+                #     if p.title != comp.title:
+                #         print("Fuzzy match",p.title,"   ",comp.title)
+                #     return True
+                return internal_compare_titles(p.title,comp.title)
     return False
 
 
