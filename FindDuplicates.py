@@ -1,6 +1,6 @@
 from FilterSelectOrm import *
 import datetime
-
+import translite
 
 # class to store found duplicates
 class Duplicate:
@@ -100,6 +100,10 @@ def equals_doi(p1,p2):
 def internal_compare_publications(p, comp):
     if equals_doi(p, comp):
         return True
+    elif compare_second_name_author(p, comp) and \
+            (p.num_authors == comp.num_authors) and \
+            (p.range_pages == comp.range_pages):
+        return True
     elif p.title == comp.title:
         return True
     return False
@@ -114,6 +118,16 @@ def find_duplicates_internal(pubs1, pubs2, pubs3, duplicates):
             if internal_compare_publications(p, comp):
                 duplicates.insert(p, comp)
 
+
+def compare_second_name_author(pub1, pub2):
+    first_author = pub1.authors[0:pub1.authors.find(' ')]
+    second_author = pub2.authors[0:pub2.authors.find(' ')]
+    first_author = translite.transliterate(first_author.lower())
+    second_author = translite.transliterate(second_author.lower())
+    if first_author == second_author:
+        return True
+    else:
+        return False
 
 def find_grouping(duplicates):
     year_inf = 1860
