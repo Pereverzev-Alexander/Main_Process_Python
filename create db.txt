@@ -29,11 +29,4 @@ WITH (
 ALTER TABLE publication
   OWNER TO postgres;
 
-create table DUPLICATEENTRY
-(
-	id int primary key,
-	id_scopus int references publication(id) unique,
-	id_wos int references publication(id) unique,
-	id_spin int references publication(id) unique
-);
 
