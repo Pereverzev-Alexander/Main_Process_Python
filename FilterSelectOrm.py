@@ -4,6 +4,7 @@
 import datetime
 from peewee import *
 
+
 # DB connection properties
 db = PostgresqlDatabase(
     'db',  # Required by Peewee.
@@ -11,7 +12,6 @@ db = PostgresqlDatabase(
     password='admin',
     host='localhost',
 )
-
 # connect to database
 try:
     db.connect()
@@ -135,3 +135,32 @@ def db_select_year(year_min, year_max, source):
 
 # for p in db_select_year_source(2000,2000,"scopus","spin"):
 #     print(p.source, p.year_publ)
+
+
+class DuplicateEntry(Model):
+    id = PrimaryKeyField(verbose_name="id")
+    id_scopus = ForeignKeyField(Publication, related_name="scopus_pubs", unique=True, null=True, verbose_name="id_scopus")
+    id_wos = ForeignKeyField(Publication, related_name="wos_pubs", unique=True, null=True, verbose_name="id_wos")
+    id_spin = ForeignKeyField(Publication, related_name="spin_pubs", unique=True, null=True, verbose_name="id_spin")
+
+    class Meta:
+        database = db
+
+# clear duplicates table
+DuplicateEntry.drop_table(True)
+DuplicateEntry.create_table()
+print("Duplicates table created")
+
+
+def db_load_duplicates(duplicates):
+    print("Inserting "+str(len(duplicates.duplicates))+" entries")
+    count_fails = 0
+    for d in duplicates.duplicates:
+        with db.transaction() as txn:
+            try:
+                DuplicateEntry.create(id_scopus=d.get_scopus_id(), id_wos=d.get_wos_id(), id_spin=d.get_spin_id())
+            except:
+                count_fails += 1
+            txn.commit()
+
+    print("Failures: "+str(count_fails))

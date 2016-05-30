@@ -1,10 +1,96 @@
 from FilterSelectOrm import *
-from FindDoiDuplicates import Duplicate, insert_duplicate, insert_internal
-from math import ceil
 import datetime
 
+
+# class to store found duplicates
+class Duplicate:
+    def __str__(self):
+        res = "duplicate: "
+        if self.scopus_p is not None:
+            res += " scopus: " + str(self.scopus_p.id)
+        if self.wos_p is not None:
+            res += " wos: " + str(self.wos_p.id)
+        if self.spin_p is not None:
+            res += " spin: " + str(self.spin_p.id)
+        return res
+
+    def __repr__(self):
+        res = "repr: "
+        return res
+
+    def insert(self, publication):
+        if publication.source == "scopus":
+            self.scopus_p = publication
+        elif publication.source == "wos":
+            self.wos_p = publication
+        else:
+            self.spin_p = publication
+
+    scopus_p = None
+    wos_p = None
+    spin_p = None
+
+    def count_instances(self):
+        count = 0
+        if self.scopus_p is not None:
+            count += 1
+        if self.wos_p is not None:
+            count += 1
+        if self.spin_p is not None:
+            count += 1
+        return count
+
+    def get_scopus_id(self):
+        if self.scopus_p is not None:
+            return self.scopus_p.id
+        return None
+
+    def get_wos_id(self):
+        if self.wos_p is not None:
+            return self.wos_p.id
+        return None
+
+    def get_spin_id(self):
+        if self.spin_p is not None:
+            return self.spin_p.id
+        return None
+
+
+# class to store all duplicates
+# does fast insertion
+class DuplicatesStorage:
+    duplicates = []
+    id_dict = {}
+
+    # insert new publication in duplicates list
+    def insert(self, publication, duplicate):
+        # check if this publication is already duplicate
+        if duplicate.id in self.id_dict:
+            # get index of duplicate entry in list
+            index = self.id_dict[duplicate.id]
+            # add publication to duplicate entry
+            self.duplicates[index].insert(publication)
+            # add new id key to registered duplicates
+            self.id_dict[publication.id] = index
+        elif publication.id in self.id_dict:
+            # get index of duplicate entry in list
+            index = self.id_dict[publication.id]
+            # add publication to duplicate entry
+            self.duplicates[index].insert(duplicate)
+            # add new id key to registered duplicates
+            self.id_dict[duplicate.id] = index
+        else:
+            # create new duplicate
+            d = Duplicate()
+            d.insert(publication)
+            d.insert(duplicate)
+            self.duplicates.append(d)
+            # save index of entry in duplicates list in dictionary
+            self.id_dict[publication.id] = len(self.duplicates)-1
+
+
 def equals_doi(p1,p2):
-    if p1.doi == "None" or p1.doi == ""  or p1.doi == "0":
+    if p1.doi == "None" or p1.doi == "" or p1.doi == "0":
         return False
     if p2.doi == "None" or p2.doi == "" or p2.doi == "0":
         return False
@@ -23,14 +109,14 @@ def find_duplicates_internal(pubs1, pubs2, pubs3, duplicates):
     for p in pubs1:
         for comp in pubs2:
             if internal_compare_publications(p, comp):
-                insert_duplicate(p, comp, duplicates)
+                duplicates.insert(p, comp)
         for comp in pubs3:
             if internal_compare_publications(p, comp):
-                insert_duplicate(p, comp, duplicates)
+                duplicates.insert(p, comp)
 
 
 def find_grouping(duplicates):
-    year_inf = 1900
+    year_inf = 1860
     year_sup = 2016
     for year in range(year_inf, year_sup):
         year_min = year - 1
@@ -45,21 +131,25 @@ def find_grouping(duplicates):
         print(year_min,year_max,total_len)
         if total_len < 2:
             continue
-        dups = []
-        find_duplicates_internal(pubs_scopus_strict, pubs_wos, pubs_spin, dups)
-        find_duplicates_internal(pubs_wos_strict, pubs_scopus, pubs_spin, dups)
-        find_duplicates_internal(pubs_spin_strict, pubs_wos, pubs_scopus, dups)
-        duplicates += dups
-        print(len(dups), len(duplicates))
+        find_duplicates_internal(pubs_scopus_strict, pubs_wos, pubs_spin, duplicates)
+        find_duplicates_internal(pubs_wos_strict, pubs_scopus, pubs_spin, duplicates)
+        find_duplicates_internal(pubs_spin_strict, pubs_wos, pubs_scopus, duplicates)
+        print(len(duplicates.duplicates))
+
+
 
 
 
 
 #test
-duplicates = []
+storage = DuplicatesStorage()
 time_start = datetime.datetime.now()
-find_grouping(duplicates)
+find_grouping(storage)
 time_end = datetime.datetime.now()
 time_diff = time_end-time_start
 print("Time elapsed: "+str(time_diff.seconds)+" s")
+db_load_duplicates(storage)
+print("Duplicates loaded to database")
+
+
 
