@@ -1,6 +1,6 @@
 from FilterSelectOrm import *
 import datetime
-
+from fuzzywuzzy import fuzz
 
 # class to store found duplicates
 class Duplicate:
@@ -100,8 +100,21 @@ def equals_doi(p1,p2):
 def internal_compare_publications(p, comp):
     if equals_doi(p, comp):
         return True
-    elif p.title == comp.title:
-        return True
+    elif p.num_authors == p.num_authors:
+        len1 = len(p.title)
+        len2 = len(comp.title)
+        if len1 == len2:
+            if p.title == comp.title:
+                return True
+            else:
+                len_diff = len1-len2
+                if len_diff < 0:
+                    len_diff = -len_diff
+                if len_diff > 10:
+                    return False
+                r = fuzz.ratio(p.title,comp.title)
+                if r > 90:
+                    return True
     return False
 
 
