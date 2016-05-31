@@ -3,6 +3,7 @@ import datetime
 import translite
 from fuzzywuzzy import fuzz
 
+
 # class to store found duplicates
 class Duplicate:
     def __str__(self):
@@ -107,10 +108,10 @@ def internal_compare_titles(title1,title2):
 def internal_compare_publications(p, comp):
     if equals_doi(p, comp):
         return True
-    elif compare_second_name_author(p, comp) and \
-            (p.num_authors == comp.num_authors) and \
-            (p.range_pages == comp.range_pages):
-        return True
+    # elif compare_second_name_author(p, comp) and \
+    #         (p.num_authors == comp.num_authors) and \
+    #         (p.range_pages == comp.range_pages):
+    #     return True
     elif p.title == comp.title:
         return True
     elif p.num_authors == p.num_authors:
@@ -130,7 +131,7 @@ def internal_compare_publications(p, comp):
                 #     if p.title != comp.title:
                 #         print("Fuzzy match",p.title,"   ",comp.title)
                 #     return True
-                return internal_compare_titles(p.title,comp.title)
+                return internal_compare_titles(p.title, comp.title)
     return False
 
 
@@ -153,6 +154,7 @@ def compare_second_name_author(pub1, pub2):
         return True
     else:
         return False
+
 
 def find_grouping(duplicates):
     year_inf = 1860
