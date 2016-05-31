@@ -29,7 +29,7 @@ Failures: 79
 Убрано нечеткое сравнение заголовков, вместо него посимвольное сравнение обработанного текста:
 убраны знаки препинания, перевод в нижний регистр
 Результат:
-Time elapsed: 304 s
-Inserting 5653 entries
-Failures: 72
+Time elapsed: 294 s
+Inserting 5655 entries
+Failures: 74
 Duplicates loaded to database
