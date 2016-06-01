@@ -121,10 +121,9 @@ def internal_compare_publications(p, comp):
         if internal_compare_titles(p.title, comp.title):
             return True
         else:
-            # ratio = fuzz.ratio(p.title, comp.title)
-            # if ratio > 90:
-            #     print("Fuzzy match","ratio", ratio,"\n", p.title,"\n", comp.title)
-            #     return True
+            ratio = fuzz.ratio(p.title, comp.title)
+            if ratio > 95:
+                return True
             return False
 
     return False
@@ -170,7 +169,7 @@ def find_grouping(duplicates):
         find_duplicates_internal(pubs_scopus_strict, pubs_wos, pubs_spin, duplicates)
         find_duplicates_internal(pubs_wos_strict, pubs_scopus, pubs_spin, duplicates)
         find_duplicates_internal(pubs_spin_strict, pubs_wos, pubs_scopus, duplicates)
-        print("Total ducplicates:", len(duplicates.duplicates))
+        print("Total duplicates:", len(duplicates.duplicates))
 
 
 
