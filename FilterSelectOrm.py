@@ -163,4 +163,4 @@ def db_load_duplicates(duplicates):
                 count_fails += 1
             txn.commit()
 
-    print("Failures: "+str(count_fails))
+    print("Duplicates in same database: "+str(count_fails))

@@ -115,7 +115,7 @@ def internal_compare_publications(p, comp):
         len1 = len(p.title)
         len2 = len(comp.title)
         len_diff = abs(len1 - len2)
-        if len_diff > 10:
+        if len_diff > 5:
             return False
 
         if internal_compare_titles(p.title, comp.title):
@@ -123,7 +123,7 @@ def internal_compare_publications(p, comp):
         else:
             # ratio = fuzz.ratio(p.title, comp.title)
             # if ratio > 90:
-            #     print("Fuzzy match", p.id, comp.id)
+            #     print("Fuzzy match","ratio", ratio,"\n", p.title,"\n", comp.title)
             #     return True
             return False
 
@@ -164,13 +164,13 @@ def find_grouping(duplicates):
         pubs_wos_strict = db_select_year(year, year, "wos")
         pubs_spin_strict = db_select_year(year, year, "spin")
         total_len = len(pubs_scopus) + len(pubs_wos) + len(pubs_spin)
-        print(year_min,year_max,total_len)
+        print("Check years",year_min,year_max,"Total articles:",total_len)
         if total_len < 2:
             continue
         find_duplicates_internal(pubs_scopus_strict, pubs_wos, pubs_spin, duplicates)
         find_duplicates_internal(pubs_wos_strict, pubs_scopus, pubs_spin, duplicates)
         find_duplicates_internal(pubs_spin_strict, pubs_wos, pubs_scopus, duplicates)
-        print(len(duplicates.duplicates))
+        print("Total ducplicates:", len(duplicates.duplicates))
 
 
 
