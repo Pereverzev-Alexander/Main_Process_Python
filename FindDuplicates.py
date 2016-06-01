@@ -1,6 +1,7 @@
 from FilterSelectOrm import *
 import datetime
 import translite
+import re
 from fuzzywuzzy import fuzz
 
 
@@ -99,39 +100,33 @@ def equals_doi(p1,p2):
     return p1.doi == p2.doi
 
 
-def internal_compare_titles(title1,title2):
-    t1 = title1.lower().replace('.', '').replace(',', '').replace('-', '').replace(':', '').replace(' ', '')
-    t2 = title2.lower().replace('.', '').replace(',', '').replace('-', '').replace(':', '').replace(' ', '')
+def internal_compare_titles(title1, title2):
+    t1 = re.sub("[- :.,]", "", title1).lower()
+    t2 = re.sub("[- :.,]", "", title2).lower()
     return t1 == t2
 
 
 def internal_compare_publications(p, comp):
     if equals_doi(p, comp):
         return True
-    # elif compare_second_name_author(p, comp) and \
-    #         (p.num_authors == comp.num_authors) and \
-    #         (p.range_pages == comp.range_pages):
-    #     return True
     elif p.title == comp.title:
         return True
-    elif p.num_authors == p.num_authors:
+    elif p.num_authors == comp.num_authors:
         len1 = len(p.title)
         len2 = len(comp.title)
-        if len1 == len2:
-            if p.title == comp.title:
-                return True
-            else:
-                len_diff = len1-len2
-                if len_diff < 0:
-                    len_diff = -len_diff
-                if len_diff > 10:
-                    return False
-                # r = fuzz.ratio(p.title,comp.title)
-                # if r > 90:
-                #     if p.title != comp.title:
-                #         print("Fuzzy match",p.title,"   ",comp.title)
-                #     return True
-                return internal_compare_titles(p.title, comp.title)
+        len_diff = abs(len1 - len2)
+        if len_diff > 10:
+            return False
+
+        if internal_compare_titles(p.title, comp.title):
+            return True
+        else:
+            # ratio = fuzz.ratio(p.title, comp.title)
+            # if ratio > 90:
+            #     print("Fuzzy match", p.id, comp.id)
+            #     return True
+            return False
+
     return False
 
 
@@ -191,6 +186,7 @@ time_diff = time_end-time_start
 print("Time elapsed: "+str(time_diff.seconds)+" s")
 db_load_duplicates(storage)
 print("Duplicates loaded to database")
+
 
 
 
