@@ -1,5 +1,4 @@
 from FilterSelectOrm import *
-import datetime
 import re
 from transliterate import translit, detect_language
 # from fuzzywuzzy import fuzz
@@ -172,22 +171,3 @@ def find_grouping(duplicates):
         find_duplicates_internal(pubs_wos_strict, pubs_scopus, pubs_spin, duplicates)
         find_duplicates_internal(pubs_spin_strict, pubs_wos, pubs_scopus, duplicates)
         print("Total duplicates:", len(duplicates.duplicates))
-
-
-
-
-
-
-#test
-storage = DuplicatesStorage()
-time_start = datetime.datetime.now()
-find_grouping(storage)
-time_end = datetime.datetime.now()
-time_diff = time_end-time_start
-print("Time elapsed: "+str(time_diff.seconds)+" s")
-db_load_duplicates(storage)
-print("Duplicates loaded to database")
-
-
-
-
