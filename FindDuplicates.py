@@ -1,8 +1,8 @@
 from FilterSelectOrm import *
 import datetime
-import translite
 import re
-from fuzzywuzzy import fuzz
+from transliterate import translit, detect_language
+# from fuzzywuzzy import fuzz
 
 
 # class to store found duplicates
@@ -121,9 +121,9 @@ def internal_compare_publications(p, comp):
         if internal_compare_titles(p.title, comp.title):
             return True
         else:
-            ratio = fuzz.ratio(p.title, comp.title)
-            if ratio > 95:
-                return True
+            # ratio = fuzz.ratio(p.title, comp.title)
+            # if ratio > 95:
+            #     return True
             return False
 
     return False
@@ -142,9 +142,11 @@ def find_duplicates_internal(pubs1, pubs2, pubs3, duplicates):
 def compare_second_name_author(pub1, pub2):
     first_author = pub1.authors[0:pub1.authors.find(' ')]
     second_author = pub2.authors[0:pub2.authors.find(' ')]
-    first_author = translite.transliterate(first_author.lower())
-    second_author = translite.transliterate(second_author.lower())
-    if first_author == second_author:
+    if detect_language(first_author) == 'ru':
+        first_author = translit(first_author, reversed=True)
+    if detect_language(second_author) == 'ru':
+        second_author = translit(second_author, reversed=True)
+    if first_author.lower() == second_author.lower():
         return True
     else:
         return False
