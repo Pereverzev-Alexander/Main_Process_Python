@@ -1,6 +1,6 @@
 from FilterSelectOrm import *
-import datetime
 import re
+from transliterate import translit, detect_language
 from fuzzywuzzy import fuzz
 
 
@@ -32,6 +32,7 @@ class Duplicate:
     wos_p = None
     spin_p = None
 
+    # number of databases, in which publication is registered
     def count_instances(self):
         count = 0
         if self.scopus_p is not None:
@@ -42,6 +43,8 @@ class Duplicate:
             count += 1
         return count
 
+    # get id of scopus publication,
+    # or None, if publication is None
     def get_scopus_id(self):
         if self.scopus_p is not None:
             return self.scopus_p.id
@@ -55,6 +58,16 @@ class Duplicate:
     def get_spin_id(self):
         if self.spin_p is not None:
             return self.spin_p.id
+        return None
+
+    # get publication by source string
+    def get_publication(self,source):
+        if source == "scopus":
+            return self.scopus_p
+        if source == "wos":
+            return self.wos_p
+        if source == "spin":
+            return self.spin_p
         return None
 
 
@@ -89,6 +102,23 @@ class DuplicatesStorage:
             self.duplicates.append(d)
             # save index of entry in duplicates list in dictionary
             self.id_dict[publication.id] = len(self.duplicates)-1
+
+    # return number of publications in all 3 databases
+    def get_triples_count(self):
+        count = 0
+        for d in self.duplicates:
+            if d.scopus_p is not None and d.wos_p is not None and d.spin_p is not None:
+                count += 1
+        return count
+
+    # return number of publication registered in two given databases
+    # sources are string names
+    def get_count_sources(self, source1, source2):
+        count = 0
+        for d in self.duplicates:
+            if d.get_publication(source1) is not None and d.get_publication(source2) is not None:
+                count += 1
+        return count
 
 
 def equals_doi(p1,p2):
@@ -138,6 +168,19 @@ def find_duplicates_internal(pubs1, pubs2, pubs3, duplicates):
                 duplicates.insert(p, comp)
 
 
+def compare_second_name_author(pub1, pub2):
+    first_author = pub1.authors[0:pub1.authors.find(' ')]
+    second_author = pub2.authors[0:pub2.authors.find(' ')]
+    if detect_language(first_author) == 'ru':
+        first_author = translit(first_author, reversed=True)
+    if detect_language(second_author) == 'ru':
+        second_author = translit(second_author, reversed=True)
+    if first_author.lower() == second_author.lower():
+        return True
+    else:
+        return False
+
+
 def find_grouping(duplicates):
     year_inf = 1860
     year_sup = 2016
@@ -158,22 +201,3 @@ def find_grouping(duplicates):
         find_duplicates_internal(pubs_wos_strict, pubs_scopus, pubs_spin, duplicates)
         find_duplicates_internal(pubs_spin_strict, pubs_wos, pubs_scopus, duplicates)
         print("Total duplicates:", len(duplicates.duplicates))
-
-
-
-
-
-
-#test
-storage = DuplicatesStorage()
-time_start = datetime.datetime.now()
-find_grouping(storage)
-time_end = datetime.datetime.now()
-time_diff = time_end-time_start
-print("Time elapsed: "+str(time_diff.seconds)+" s")
-db_load_duplicates(storage)
-print("Duplicates loaded to database")
-
-
-
-
