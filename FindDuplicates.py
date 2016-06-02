@@ -1,6 +1,5 @@
 from FilterSelectOrm import *
 import datetime
-import translite
 import re
 from fuzzywuzzy import fuzz
 
@@ -137,17 +136,6 @@ def find_duplicates_internal(pubs1, pubs2, pubs3, duplicates):
         for comp in pubs3:
             if internal_compare_publications(p, comp):
                 duplicates.insert(p, comp)
-
-
-def compare_second_name_author(pub1, pub2):
-    first_author = pub1.authors[0:pub1.authors.find(' ')]
-    second_author = pub2.authors[0:pub2.authors.find(' ')]
-    first_author = translite.transliterate(first_author.lower())
-    second_author = translite.transliterate(second_author.lower())
-    if first_author == second_author:
-        return True
-    else:
-        return False
 
 
 def find_grouping(duplicates):
