@@ -32,6 +32,7 @@ class Duplicate:
     wos_p = None
     spin_p = None
 
+    # number of databases, in which publication is registered
     def count_instances(self):
         count = 0
         if self.scopus_p is not None:
@@ -42,6 +43,8 @@ class Duplicate:
             count += 1
         return count
 
+    # get id of scopus publication,
+    # or None, if publication is None
     def get_scopus_id(self):
         if self.scopus_p is not None:
             return self.scopus_p.id
@@ -55,6 +58,16 @@ class Duplicate:
     def get_spin_id(self):
         if self.spin_p is not None:
             return self.spin_p.id
+        return None
+
+    # get publication by source string
+    def get_publication(self,source):
+        if source == "scopus":
+            return self.scopus_p
+        if source == "wos":
+            return self.wos_p
+        if source == "spin":
+            return self.spin_p
         return None
 
 
@@ -90,8 +103,25 @@ class DuplicatesStorage:
             # save index of entry in duplicates list in dictionary
             self.id_dict[publication.id] = len(self.duplicates)-1
 
+    # return number of publications in all 3 databases
+    def get_triples_count(self):
+        count = 0
+        for d in self.duplicates:
+            if d.scopus_p is not None and d.wos_p is not None and d.spin_p is not None:
+                count += 1
+        return count
 
-def equals_doi(p1,p2):
+    # return number of publication registered in two given databases
+    # sources are string names
+    def get_count_sources(self, source1, source2):
+        count = 0
+        for d in self.duplicates:
+            if d.get_publication(source1) is not None and d.get_publication(source2) is not None:
+                count += 1
+        return count
+
+
+def equals_doi(p1, p2):
     if p1.doi == "None" or p1.doi == "" or p1.doi == "0":
         return False
     if p2.doi == "None" or p2.doi == "" or p2.doi == "0":
