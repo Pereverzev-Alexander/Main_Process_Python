@@ -1,4 +1,6 @@
 from FilterSelectOrm import db_select_year_range
+from FilterSelectOrm import db_select_notDOI_publication
+import time, datetime
 
 
 # find articles with the same count author
@@ -24,6 +26,22 @@ def find_same_pages(year_min, year_max, source1, source2):
             if p1.range_pages == p2.range_pages:
                 lst.append((p1,p2))
     return lst
+
+
+def find_same_pages_year():
+    lst =[]
+    lst_pub = db_select_notDOI_publication()
+    for pub1 in lst_pub:
+        for pub2 in lst_pub:
+            if (pub1.num_authors == pub2.num_authors) & (pub1.year_publ == pub2.year_publ):
+                lst.append(pub1)
+                lst_pub.remove(pub2)
+    return lst
+
+
+list_pub = find_same_pages_year()
+print("Found with same pages and year (use db_select_DOI_publ): "+str(len(list_pub)))
+quit()
 
 # test function
 list_pub = find_same_num_authors(2001, 2001, "spin", "wos")
