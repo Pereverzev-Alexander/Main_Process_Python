@@ -1,6 +1,12 @@
-Альтернативная реализация с нечетким сравнением заголовков
-Total duplicates: 5669
-Time elapsed: 755 s
-Inserting 5669 entries
-Duplicates in same database: 95
+Убрано нечеткое сравнение заголовков, вместо него посимвольное сравнение обработанного текста:
+убраны знаки препинания, перевод в нижний регистр
+Результат:
+Total duplicates: 5645
+Time elapsed: 332 s
+ Inserting 5645 entries
+Duplicates in same database: 81
 Duplicates loaded to database
+In 3 databases: 2652
+In Scopus and WoS: 3591
+In Scopus and Spin: 4515
+In Spin and WoS: 2843
