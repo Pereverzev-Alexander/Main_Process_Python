@@ -4,9 +4,29 @@ from transliterate import translit, detect_language
 from fuzzywuzzy import fuzz
 
 
-# class to store found duplicates
+
 class Duplicate:
+    """ Класс для хранения всех дубликатов одной статьи
+
+    Поля:
+    scopus_p -- дубликат в SCOPUS
+    wos_p -- дубликат в WOS
+    spin_p -- дубликат в SPIN
+    Методы:
+    __str__ -- получить  строковое представление
+    __repr__ -- получить формальное строковое представление
+    insert -- добавить статью в дубликаты
+    count_instances -- посчитать, в скольких базах повторяется статья
+    get_scopus_id -- получить ID в SCOPUS
+    get_wos_id -- получить ID в WOS
+    get_spin_id -- получить ID в SPIN
+
+    """
     def __str__(self):
+        """ Получить строку, с ID дубликатов в соответствующих базах
+
+        :return: строка с ID дубликатов в соотвтетствующих базах
+        """
         res = "duplicate: "
         if self.scopus_p is not None:
             res += " scopus: " + str(self.scopus_p.id)
@@ -21,6 +41,11 @@ class Duplicate:
         return res
 
     def insert(self, publication):
+        """ Добавление  статьи в дубликаты
+
+        :param publication: добавляемая статься
+        :return: нет возвращаемого значения
+        """
         if publication.source == "scopus":
             self.scopus_p = publication
         elif publication.source == "wos":
@@ -34,6 +59,10 @@ class Duplicate:
 
     # number of databases, in which publication is registered
     def count_instances(self):
+        """ Функция для подсчёта баз, в которых есть дубликаты статьи
+
+        :return: количество баз, в которых есть дубликаты статьи
+        """
         count = 0
         if self.scopus_p is not None:
             count += 1
@@ -46,16 +75,28 @@ class Duplicate:
     # get id of scopus publication,
     # or None, if publication is None
     def get_scopus_id(self):
+        """ Получить SCOPUS_ID
+
+        :return: SCOPUS_ID
+        """
         if self.scopus_p is not None:
             return self.scopus_p.id
         return None
 
     def get_wos_id(self):
+        """ Получить WOS_ID
+
+        :return: WOS_ID
+        """
         if self.wos_p is not None:
             return self.wos_p.id
         return None
 
     def get_spin_id(self):
+        """ Получить SPIN_ID
+
+        :return: SPIN_ID
+        """
         if self.spin_p is not None:
             return self.spin_p.id
         return None
@@ -71,9 +112,12 @@ class Duplicate:
         return None
 
 
-# class to store all duplicates
-# does fast insertion
+
 class DuplicatesStorage:
+    """ Класс для хранения всех дубликатов статей, имеющих дубликаты
+    Поля:
+    duplicates -- список дубликатов
+    """
     duplicates = []
     id_dict = {}
 
