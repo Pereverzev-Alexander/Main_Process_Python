@@ -1,8 +1,17 @@
+# Модуль содержащий функции для поиска статей, имеющих определённые идентичные параметры
 from FilterSelectOrm import db_select_year_range
 
 
 # find articles with the same count author
 def find_same_num_authors(year_min, year_max, source1, source2):
+    """ Фунцкция для поиска статей с одинаковым количеством авторов в двух базах в указанном временном прмежутке
+
+    :param year_min: нижняя граница промежутка
+    :param year_max: верхняя граница промежутка
+    :param source1: первая база для поиска
+    :param source2: вторая база для поиска
+    :return:список идентичных статей
+    """
     lst = []
     lst_1 = db_select_year_range(year_min, year_max, source1)
     lst_2 = db_select_year_range(year_min, year_max, source2)
@@ -16,6 +25,14 @@ def find_same_num_authors(year_min, year_max, source1, source2):
 # returns all articles published within given range
 # from given sources with same pages range
 def find_same_pages(year_min, year_max, source1, source2):
+    """ Функция поиска идентичных статей в двух базах в указанном временном прмежутке
+
+    :param year_min: нижняя граница промежутка
+    :param year_max: верхняя граница промежутка
+    :param source1: первая база для поиска
+    :param source2: вторая база для поиска
+    :return:список идентичных статей
+    """
     lst = []
     lst_1 = db_select_year_range(year_min, year_max, source1)
     lst_2 = db_select_year_range(year_min, year_max, source2)
@@ -25,7 +42,7 @@ def find_same_pages(year_min, year_max, source1, source2):
                 lst.append((p1,p2))
     return lst
 
-# test function
+# Тестирование
 list_pub = find_same_num_authors(2001, 2001, "spin", "wos")
 print("Found with same count authors: "+str(len(list_pub)))
 
