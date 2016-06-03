@@ -6,7 +6,27 @@ from transliterate import translit, detect_language
 
 # class to store found duplicates
 class Duplicate:
+    """ Класс для хранения всех дубликатов одной статьи
+
+    Поля:
+    scopus_p -- дубликат в SCOPUS
+    wos_p -- дубликат в WOS
+    spin_p -- дубликат в SPIN
+    Методы:
+    __str__ -- получить  строковое представление
+    __repr__ -- получить формальное строковое представление
+    insert -- добавить статью в дубликаты
+    count_instances -- посчитать, в скольких базах повторяется статья
+    get_scopus_id -- получить ID в SCOPUS
+    get_wos_id -- получить ID в WOS
+    get_spin_id -- получить ID в SPIN
+
+    """
     def __str__(self):
+        """ Получить строку, с ID дубликатов в соответствующих базах
+
+        :return: строка с ID дубликатов в соотвтетствующих базах
+        """
         res = "duplicate: "
         if self.scopus_p is not None:
             res += " scopus: " + str(self.scopus_p.id)
@@ -21,6 +41,11 @@ class Duplicate:
         return res
 
     def insert(self, publication):
+        """ Добавление  статьи в дубликаты
+
+        :param publication: добавляемая статься
+        :return: нет возвращаемого значения
+        """
         if publication.source == "scopus":
             self.scopus_p = publication
         elif publication.source == "wos":
@@ -34,6 +59,10 @@ class Duplicate:
 
     # number of databases, in which publication is registered
     def count_instances(self):
+        """ Функция для подсчёта баз, в которых есть дубликаты статьи
+
+        :return: количество баз, в которых есть дубликаты статьи
+        """
         count = 0
         if self.scopus_p is not None:
             count += 1
@@ -46,16 +75,28 @@ class Duplicate:
     # get id of scopus publication,
     # or None, if publication is None
     def get_scopus_id(self):
+        """ Получить SCOPUS_ID
+
+        :return: SCOPUS_ID
+        """
         if self.scopus_p is not None:
             return self.scopus_p.id
         return None
 
     def get_wos_id(self):
+        """ Получить WOS_ID
+
+        :return: WOS_ID
+        """
         if self.wos_p is not None:
             return self.wos_p.id
         return None
 
     def get_spin_id(self):
+        """ Получить SPIN_ID
+
+        :return: SPIN_ID
+        """
         if self.spin_p is not None:
             return self.spin_p.id
         return None
@@ -74,11 +115,19 @@ class Duplicate:
 # class to store all duplicates
 # does fast insertion
 class DuplicatesStorage:
+    """ Класс для хранения всех дубликатов статей, имеющих дубликаты
+    Поля:
+    duplicates -- список дубликатов
+    """
     duplicates = []
     id_dict = {}
 
     # insert new publication in duplicates list
     def insert(self, publication, duplicate):
+        """ Добаление статьи в спискок дубликатов
+            :parameter publication: статья в виде объекта Publication
+            :parameter duplicate: список дубликотов
+        """
         # check if this publication is already duplicate
         if duplicate.id in self.id_dict:
             # get index of duplicate entry in list
@@ -105,6 +154,9 @@ class DuplicatesStorage:
 
     # return number of publications in all 3 databases
     def get_triples_count(self):
+        """ Возвращает количество статьей во всех трех базах (SPIN, SCOPUS, WoS)
+            :return count: количество статей
+        """
         count = 0
         for d in self.duplicates:
             if d.scopus_p is not None and d.wos_p is not None and d.spin_p is not None:
@@ -114,6 +166,11 @@ class DuplicatesStorage:
     # return number of publication registered in two given databases
     # sources are string names
     def get_count_sources(self, source1, source2):
+        """ Возвращает количество зарегистрированных статей в двух выбранных базах данных
+            :parameter source1: название первой базы
+            :parameter source2: название второй базы
+            :return count: количество статей
+        """
         count = 0
         for d in self.duplicates:
             if d.get_publication(source1) is not None and d.get_publication(source2) is not None:
@@ -121,7 +178,13 @@ class DuplicatesStorage:
         return count
 
 
-def equals_doi(p1, p2):
+def equals_doi(p1,p2):
+    """ Сравнивает две статьи по ДОИ
+        :parameter p1: первая статья(объект класса Publication)
+        :parameter p2: вторая статья(объект класса Publication)
+        :return True: статьи совпали по ДОИ
+        :return False: статьи  не совпали по ДОИ либо ДОИ отсутсвует
+    """
     if p1.doi == "None" or p1.doi == "" or p1.doi == "0":
         return False
     if p2.doi == "None" or p2.doi == "" or p2.doi == "0":
@@ -130,12 +193,26 @@ def equals_doi(p1, p2):
 
 
 def internal_compare_titles(title1, title2):
+    """ Сравнивает две статьи по названию. Текст обоих названий приводится к нижнему регистру и из него убираютмся
+     все пробелы, точки, тире, двоеточия, запятые.
+        :parameter title1: название первой статьи
+        :parameter title2: название второй статьи
+        :return True: названия совпали
+        :return False: названия  не совпали
+    """
     t1 = re.sub("[- :.,]", "", title1).lower()
     t2 = re.sub("[- :.,]", "", title2).lower()
     return t1 == t2
 
 
 def internal_compare_publications(p, comp):
+    """ Сравнение двух статей сначала по ДОИ; затем по названию статьи (без преобразования); после по числу авторов,
+    длинне названия статьи, упрощенному названию и нечеткому сравнению
+        :parameter p: первая статья(объект класса Publication)
+        :parameter comp: вторая статья(объект класса Publication)
+        :return True: статьи совпали
+        :return False: статьи  не совпали
+   """
     if equals_doi(p, comp):
         return True
     elif p.title == comp.title:
@@ -159,6 +236,12 @@ def internal_compare_publications(p, comp):
 
 
 def find_duplicates_internal(pubs1, pubs2, pubs3, duplicates):
+    """ Поиск дубликатов статей
+        :parameter pubs1: первый список статей для сравнения (SPIN)
+        :parameter pubs2: второй список статей для сравнения (WoS)
+        :parameter pubs3: третий список статей для сравнения (SCOPUS)
+        :return duplicates: список совпавших статьей
+   """
     for p in pubs1:
         for comp in pubs2:
             if internal_compare_publications(p, comp):
@@ -169,6 +252,12 @@ def find_duplicates_internal(pubs1, pubs2, pubs3, duplicates):
 
 
 def compare_second_name_author(pub1, pub2):
+    """ Сравнение двух статей по первой фамилии авторов. Фамилии транслителированны и приведены к нижнему регистру.
+        :parameter pub1: первая статья(объект класса Publication)
+        :parameter pub2: вторая статья(объект класса Publication)
+        :return True: статьи совпали
+        :return False: статьи  не совпали
+    """
     first_author = pub1.authors[0:pub1.authors.find(' ')]
     second_author = pub2.authors[0:pub2.authors.find(' ')]
     if detect_language(first_author) == 'ru':
@@ -182,6 +271,8 @@ def compare_second_name_author(pub1, pub2):
 
 
 def find_grouping(duplicates):
+    """ Функция определения совпадающих статей.
+    """
     year_inf = 1860
     year_sup = 2016
     for year in range(year_inf, year_sup):
