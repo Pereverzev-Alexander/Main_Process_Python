@@ -1,5 +1,5 @@
 # Модуль содержащий функции для поиска статей, имеющих определённые идентичные параметры
-from FilterSelectOrm import db_select_year_range
+from DbInteractions import db_select_year_range
 
 
 # find articles with the same count author

@@ -3,6 +3,7 @@ from FindDuplicates import find_grouping
 from FindDuplicates import db_load_duplicates
 import datetime
 
+
 # find duplicates
 storage = DuplicatesStorage()
 time_start = datetime.datetime.now()
