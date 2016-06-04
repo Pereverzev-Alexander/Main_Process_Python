@@ -1,7 +1,7 @@
 from DbInteractions import *
 import re
 from transliterate import translit, detect_language
-# from fuzzywuzzy import fuzz
+from fuzzywuzzy import fuzz
 
 
 # class to store found duplicates
@@ -218,6 +218,11 @@ def internal_compare_range_pages(range1, range2):
     return None
 
 
+def normalize_authors(authors,shortword,digit_word):
+    auth = shortword.sub("", authors)
+    return digit_word.sub("", auth)
+
+
 def internal_compare_publications(p, comp):
     """ Сравнение двух статей сначала по ДОИ; затем по названию статьи (без преобразования); после по числу авторов,
     длинне названия статьи, упрощенному названию
@@ -226,6 +231,9 @@ def internal_compare_publications(p, comp):
         :return True: статьи совпали
         :return False: статьи  не совпали
    """
+    # prepare regular expression to remove short words
+    shortword = re.compile(r'\W*\b\w{1,3}\b')
+    digit_word = re.compile(r'[\d,.]')
     if equals_doi(p, comp):
         return True
     # elif p.title == comp.title:
@@ -235,9 +243,12 @@ def internal_compare_publications(p, comp):
         comp_pages = internal_compare_range_pages(p.range_pages,comp.range_pages)
         if comp_pages is not None and comp_pages is False:
             if internal_compare_titles(p.title, comp.title):
-                print(p.id,comp.id,p.range_pages,comp.range_pages,p.title)
-                print(p.authors)
-                print(comp.authors)
+                print(p.id, comp.id,p.range_pages, comp.range_pages,p.title)
+                normauth1 = normalize_authors(p.authors,shortword,digit_word)
+                print(normauth1)
+                normauth2 = normalize_authors(comp.authors, shortword, digit_word)
+                print(normauth2)
+                print(fuzz.token_set_ratio(normauth1, normauth2))
             return False
         # len1 = len(p.title)
         # len2 = len(comp.title)
