@@ -1,4 +1,4 @@
-from FilterSelectOrm import *
+from DbInteractions import *
 import re
 from transliterate import translit, detect_language
 # from fuzzywuzzy import fuzz
@@ -192,6 +192,11 @@ def equals_doi(p1,p2):
     return p1.doi == p2.doi
 
 
+# Удаление лишних символов из заголовка и приведение к нижнему регистру
+def normalize_title(title):
+    return re.sub("[- :.,]", "", title).lower()
+
+
 def internal_compare_titles(title1, title2):
     """ Сравнивает две статьи по названию. Текст обоих названий приводится к нижнему регистру и из него убираютмся
      все пробелы, точки, тире, двоеточия, запятые.
@@ -200,9 +205,17 @@ def internal_compare_titles(title1, title2):
         :return True: названия совпали
         :return False: названия  не совпали
     """
-    t1 = re.sub("[- :.,]", "", title1).lower()
-    t2 = re.sub("[- :.,]", "", title2).lower()
-    return t1 == t2
+    return normalize_title(title1) == normalize_title(title2)
+
+
+def is_pages_range_valid(range):
+    return range != "" and '-' in range and re.sub("[-]", "", range).isdigit()
+
+
+def internal_compare_range_pages(range1, range2):
+    if is_pages_range_valid(range1) and is_pages_range_valid(range2):
+        return range1 == range2
+    return None
 
 
 def internal_compare_publications(p, comp):
@@ -215,14 +228,22 @@ def internal_compare_publications(p, comp):
    """
     if equals_doi(p, comp):
         return True
-    elif p.title == comp.title:
-        return True
+    # elif p.title == comp.title:
+    #     return True
     elif p.num_authors == comp.num_authors:
-        len1 = len(p.title)
-        len2 = len(comp.title)
-        len_diff = abs(len1 - len2)
-        if len_diff > 5:
+        # compare pages range
+        comp_pages = internal_compare_range_pages(p.range_pages,comp.range_pages)
+        if comp_pages is not None and comp_pages is False:
+            if internal_compare_titles(p.title, comp.title):
+                print(p.id,comp.id,p.range_pages,comp.range_pages,p.title)
+                print(p.authors)
+                print(comp.authors)
             return False
+        # len1 = len(p.title)
+        # len2 = len(comp.title)
+        # len_diff = abs(len1 - len2)
+        # if len_diff > 5:
+        #     return False
 
         if internal_compare_titles(p.title, comp.title):
             return True
@@ -292,3 +313,4 @@ def find_grouping(duplicates):
         find_duplicates_internal(pubs_wos_strict, pubs_scopus, pubs_spin, duplicates)
         find_duplicates_internal(pubs_spin_strict, pubs_wos, pubs_scopus, duplicates)
         print("Total duplicates:", len(duplicates.duplicates))
+

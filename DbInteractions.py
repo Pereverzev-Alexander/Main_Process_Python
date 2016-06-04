@@ -3,28 +3,13 @@
 
 import datetime
 from peewee import *
-
-
-# DB connection properties
-db = PostgresqlDatabase(
-    'db',  # Required by Peewee.
-    user='postgres',  # Will be passed directly to psycopg2.
-    password='admin',
-    host='localhost',
-)
-# connect to database
-try:
-    db.connect()
-except:
-    print("Failed to connect to database")
-    quit()
-print("Connected to database")
+from db_config import db_get_instance
 
 
 # ORM class for publication
 class Publication(Model):
     """ Класс, представляющий доступ к таблице Публикации в виде объекта
-        dt_db_table - название таблицы в БД
+        db_table - название таблицы в БД
         title - название статьи
         authors - инициалы авторов
         num_authors - количество авторов в статье
@@ -50,7 +35,7 @@ class Publication(Model):
     source = CharField()
 
     class Meta:
-        database = db
+        database = db_get_instance()
 
 
 # unify None and invalid fields format
@@ -202,7 +187,7 @@ class DuplicateEntry(Model):
     id_spin = ForeignKeyField(Publication, related_name="spin_pubs", unique=True, null=True, verbose_name="id_spin")
 
     class Meta:
-        database = db
+        database = db_get_instance()
 
 # clear duplicates table
 DuplicateEntry.drop_table(True)
@@ -216,6 +201,7 @@ def db_load_duplicates(duplicates):
     """
     print("Inserting "+str(len(duplicates.duplicates))+" entries")
     count_fails = 0
+    db = db_get_instance()
     for d in duplicates.duplicates:
         with db.transaction() as txn:
             try:
@@ -225,3 +211,5 @@ def db_load_duplicates(duplicates):
             txn.commit()
 
     print("Duplicates in same database: "+str(count_fails))
+
+

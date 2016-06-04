@@ -1,7 +1,9 @@
+from db_config import db_init_connect
 from FindDuplicates import DuplicatesStorage
 from FindDuplicates import find_grouping
 from FindDuplicates import db_load_duplicates
 import datetime
+
 
 # find duplicates
 storage = DuplicatesStorage()

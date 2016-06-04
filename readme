@@ -1,12 +1,12 @@
 Убрано нечеткое сравнение заголовков, вместо него посимвольное сравнение обработанного текста:
 убраны знаки препинания, перевод в нижний регистр
 Результат:
-Total duplicates: 5645
-Time elapsed: 332 s
- Inserting 5645 entries
-Duplicates in same database: 81
+Total duplicates: 5561
+Time elapsed: 366 s
+Inserting 5561 entries
+Duplicates in same database: 70
 Duplicates loaded to database
-In 3 databases: 2652
-In Scopus and WoS: 3591
-In Scopus and Spin: 4515
-In Spin and WoS: 2843
+In 3 databases: 2529
+In Scopus and WoS: 3422
+In Scopus and Spin: 4486
+In Spin and WoS: 2711
