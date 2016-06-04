@@ -114,8 +114,7 @@ class Publication(Model):
                 print(count)
 
 
-
-
+# TO BE REFACTORED
 # unify None and invalid fields format
 def normalize_publication(publication):
     """ Приведение полей (doi и range_pages) статьи к общему виду
@@ -129,126 +128,18 @@ def normalize_publication(publication):
     return publication
 
 
-# get publication year as integer from datetime in table entry
-def get_publication_year(publication):
-    """ Получение года публикации статьи из объекта Publication
-        :parameter publication: объект класса Publication
-        :returns year: год публикации
-    """
-    year_str = str(publication.year_publ)
-    if year_str == "0":
-        year = 0
-    else:
-        try:
-            dt = datetime.datetime.fromtimestamp(int(year_str))
-            year = int(dt.year)
-        except OSError:
-            year = 0
-    return year
-
-
-# function to perform select query
-# get all publications from given source: string database ("scopus")
-# and year withing year_min: int and year_max: int
-def db_select_year_range(year_min, year_max, source):
-    """ Запрос к БД, возвращающий статьи (в виде списока объектов Publication), которые опубликованы в период между
-    годами из определенной базы (SPIN, WoS, SCOPUS)
-        :parameter year_min: нижняя граница
-        :parameter year_max: верхняя граница
-        :parameter source: название базы
-        :returns pub_list: список статей (в виде списока объектов Publication)
-    """
-    pub_list = []
-    for publication in Publication.select().where(Publication.source == source and
-                                                                          year_min <= Publication.year_publ <= year_max):
-        normalize_publication(publication)
-        pub_list.append(publication)
-    return pub_list
-
-
-# test function
-# for p in db_select_year_range(1970, 1980, "scopus"):
-#     print(str(p.year_publ) + " " + p.title)
-
-
-# function to perform select query
-# get all publications without doi and
-# publications that do not coincide on doi
-def db_select_notDOI_publication():
-    """ Запрос к БД, возвращающий статьи (в виде списока объектов Publication), которые не сопадают по ДОИ либо не
-    имеют его
-        :returns pub_list: список статей (в виде списока объектов Publication)
-    """
-    pub_list = []
-    for publication in Publication.select().where(Publication.doi.not_in(Publication.select(
-            Publication.doi).where((Publication.doi != '0') & (Publication.doi != 'None')).group_by(
-        Publication.doi).having(fn.Count('*') > 1))):
-        # normalize
-        normalize_publication(publication)
-        pub_list.append(publication)
-    return pub_list
-
-
-# #test function
-
-# #test function
-# listPub = db_select_notDOI_publication()
-# for p in listPub:
-#      print(p.year_publ+" "+p.doi)
-# print("Count publications " + str(len(listPub)))
-
-
-# select all articles from source
-def db_select_all(source):
-    """ Запрос к БД, возвращающий статьи (в виде списока объектов Publication)из определенной базы (SPIN, WoS, SCOPUS)
-        :parameter source: название базы
-        :returns pub_list: список статей (в виде списока объектов Publication)
-    """
-    pub_list = []
-    for publication in Publication.select().where(Publication.source == source):
-        normalize_publication(publication)
-        pub_list.append(publication)
-    return pub_list
-
-
-# # test function
-# print(len(db_select_all("scopus"))+len(db_select_all("wos"))+len(db_select_all("spin")))
-
-
-def db_select_year_source(year_min, year_max, source1, source2):
-    """ Запрос к БД, возвращающий статьи (в виде списока объектов Publication), которые опубликованы в период между
-    годами из двух баз (SPIN, WoS, SCOPUS)
-        :parameter year_min: нижняя граница
-        :parameter year_max: верхняя граница
-        :parameter source1: название первой базы
-        :parameter source2: название второй базы
-        :returns pub_list: список статей (в виде списока объектов Publication)
-    """
-    pub_list = []
-    for publication in Publication.select().where((Publication.source << [source1,source2]) &
-                                                   Publication.year_publ.between(year_min,year_max)):
-        normalize_publication(publication)
-        pub_list.append(publication)
-    return pub_list
-
-
-def db_select_year(year_min, year_max, source):
-    """ Запрос к БД, возвращающий статьи (в виде списока объектов Publication), которые опубликованы в период между
-    годами из определенной базы (SPIN, WoS, SCOPUS)
-        :parameter year_min: нижняя граница
-        :parameter year_max: верхняя граница
+def db_select_year(year, source):
+    """ Запрос к БД, возвращающий статьи (в виде списока объектов Publication), которые опубликованы в данный год
+        :parameter year: год
         :parameter source: название базы
         :returns pub_list: список статей (в виде списока объектов Publication)
     """
     pub_list = []
     for publication in Publication.select().where((Publication.source == source) &
-                                                   Publication.year_publ.between(year_min,year_max)):
+                                                  (Publication.year_publ == year)):
         normalize_publication(publication)
         pub_list.append(publication)
     return pub_list
-
-# for p in db_select_year_source(2000,2000,"scopus","spin"):
-#     print(p.source, p.year_publ)
 
 
 class DuplicateEntry(Model):
@@ -264,30 +155,122 @@ class DuplicateEntry(Model):
     id_wos = ForeignKeyField(Publication, related_name="wos_pubs", unique=True, null=True, verbose_name="id_wos")
     id_spin = ForeignKeyField(Publication, related_name="spin_pubs", unique=True, null=True, verbose_name="id_spin")
 
+    def set_id(self,publ):
+        if publ.source == "scopus":
+            self.id_scopus = publ.id
+        elif publ.source == "wos":
+            self.id_wos = publ.id
+        else:
+            self.id_spin = publ.id
+
+    def to_str(self):
+        s = "scopus:"
+        if self.id_scopus is not None:
+            s += str(self.id_scopus)+", "
+        s = "wos:"
+        if self.id_wos is not None:
+            s += str(self.id_wos) + ", "
+        s = "spin:"
+        if self.id_spin is not None:
+            s += str(self.id_spin)
+
     class Meta:
         database = db_get_instance()
 
-# clear duplicates table
-DuplicateEntry.drop_table(True)
-DuplicateEntry.create_table()
-print("Duplicates table created")
+
+def db_drop_duplicates():
+    # clear duplicates table
+    DuplicateEntry.drop_table(True)
+    DuplicateEntry.create_table()
+    print("Duplicates table created")
 
 
-def db_load_duplicates(duplicates):
-    """ Загрузка в таблицу Дубликаты идетификаторов совпадающих статей.
-        :parameter duplicates: объект класса DuplicateEntry
+def db_search_in_duplicates(id1, id2):
+    """ Проверить наличие одной из статей с данными id в базе дубликатов
+        :parameter id1: ID первой статьи
+        :parameter id2: ID второй статьи
+        :returns None: нет совпадения
+        :returns DuplicateEntry: запись в БД
     """
-    print("Inserting "+str(len(duplicates.duplicates))+" entries")
-    count_fails = 0
-    db = db_get_instance()
-    for d in duplicates.duplicates:
-        with db.transaction() as txn:
-            try:
-                DuplicateEntry.create(id_scopus=d.get_scopus_id(), id_wos=d.get_wos_id(), id_spin=d.get_spin_id())
-            except:
-                count_fails += 1
-            txn.commit()
+    res1 = DuplicateEntry.select().where((DuplicateEntry.id_scopus == id1) |
+                                        (DuplicateEntry.id_wos == id1) |
+                                        (DuplicateEntry.id_spin == id1))
+    res2 = DuplicateEntry.select().where((DuplicateEntry.id_scopus == id2) |
+                                         (DuplicateEntry.id_wos == id2) |
+                                         (DuplicateEntry.id_spin == id2))
+    if res1.count() > 0 and res2.count() > 0:
+        return None
+    if res1.count() > 0:
+        return res1.get()
+    elif res2.count() > 0:
+        return res2.get()
+    return None
 
-    print("Duplicates in same database: "+str(count_fails))
+
+def db_update_duplicate(entry, publ1, publ2):
+    """ Обновить запись о двойном совпадении, добавив 3 статью
+        :parameter entry: Запись в БД
+        :parameter publ1: Первая статья
+        :parameter publ2: Вторая статья
+    """
+    entry.set_id(publ1)
+    entry.set_id(publ2)
+    entry.save()
 
 
+def db_insert_duplicate(publ1, publ2):
+    """ Функция вставки совпадения двух статей в базу
+        Если одна из статей уже есть в базе, то создается тройное совпадение (в 3 базах сразу)
+        :parameter publ1: Первая статья
+        :parameter publ2: Вторая статья
+        :returns integer: Количество новых записей о совпадении (0 или 1)
+    """
+    entry = db_search_in_duplicates(publ1.id, publ2.id)
+    if entry is not None:
+        db_update_duplicate(entry, publ1, publ2)
+        return 0
+    # this duplicate is new
+    d = DuplicateEntry()
+    d.set_id(publ1)
+    d.set_id(publ2)
+    with db_get_instance().transaction() as txn:
+        try:
+            d.save()
+            res = 1
+        except IntegrityError:
+            res = 0
+        txn.commit()
+    return res
+
+
+def db_count_duplicates():
+    """ Подсчет всех совпадений
+    """
+    return DuplicateEntry.select().count()
+
+
+def db_count_triples():
+    """ Подсчет статей, встречающихся в 3 базах
+    """
+    return DuplicateEntry.select().where(~(DuplicateEntry.id_scopus >> None) &
+                                         ~(DuplicateEntry.id_wos >> None) &
+                                         ~(DuplicateEntry.id_spin >> None)).count()
+
+
+def db_count_excluding(source):
+    """ Посчет совпадений, кроме тех, которые включают статьи в данной базе
+        Используется для подсчета совпадений в только 2 базах
+    """
+    if source == "scopus":
+        return DuplicateEntry.select().where((DuplicateEntry.id_scopus >> None) &
+                                             ~(DuplicateEntry.id_wos >> None) &
+                                             ~(DuplicateEntry.id_spin >> None)).count()
+    if source == "wos":
+        return DuplicateEntry.select().where(~(DuplicateEntry.id_scopus >> None) &
+                                             (DuplicateEntry.id_wos >> None) &
+                                             ~(DuplicateEntry.id_spin >> None)).count()
+    if source == "spin":
+        return DuplicateEntry.select().where(~(DuplicateEntry.id_scopus >> None) &
+                                             ~(DuplicateEntry.id_wos >> None) &
+                                             (DuplicateEntry.id_spin >> None)).count()
+    return None
