@@ -1,11 +1,11 @@
 from FindDuplicates import find_grouping
-from FindDuplicates import db_drop_duplicates
+from FindDuplicates import db_recreate_duplicates
 from DbInteractions import db_count_excluding,db_count_duplicates,db_count_triples
 import datetime
 
 
 # find duplicates
-db_drop_duplicates()
+db_recreate_duplicates()
 time_start = datetime.datetime.now()
 find_grouping()
 time_end = datetime.datetime.now()

@@ -3,7 +3,7 @@ import json
 import os
 import re
 import datetime
-from DbInteractions import Publication
+from DbInteractions import Publication,db_drop_duplicates
 
 
 def normalize_page_range_publication(range_pages_str):
@@ -183,7 +183,17 @@ def load_json_wos_in_db(dir_json):
             count += 1
     return count
 
+
+def db_drop_publications():
+    # clear duplicates table
+    db_drop_duplicates()
+    Publication.drop_table(True)
+    Publication.create_table()
+    print("Publications table created")
+
+
 # main part
+db_drop_publications()
 count_spin = load_json_spin_in_db(r'publications\spin')
 count_scopus = load_json_scopus_in_db(r'publications\scopus')
 count_wos = load_json_wos_in_db(r'publications\wos')

@@ -179,8 +179,13 @@ class DuplicateEntry(Model):
 
 
 def db_drop_duplicates():
-    # clear duplicates table
+    # drop table
     DuplicateEntry.drop_table(True)
+
+
+def db_recreate_duplicates():
+    # clear duplicates table
+    db_drop_duplicates()
     DuplicateEntry.create_table()
     print("Duplicates table created")
 
