@@ -114,10 +114,7 @@ class Publication(Model):
                 print(count)
 
 
-# Test
-t = Publication()
-Publication.parse_json_SCOPUS(t,r'publications\scopus')
-quit()
+
 
 # unify None and invalid fields format
 def normalize_publication(publication):
