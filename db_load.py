@@ -106,6 +106,8 @@ def load_json_spin_in_db(dir_json):
                     jsDoi = jsPaper["codes"]["code"]
                     if jsDoi["type"] == "DOI":
                         publication.doi = jsDoi["text"]
+            if publication.doi is None:
+                publication.doi = ""
             if "titles" in jsPaper:
                 if isinstance(jsPaper["titles"]["title"], dict):
                     if isinstance(jsPaper["titles"]["title"]["text"], str):
