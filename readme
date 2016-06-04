@@ -1,12 +1,9 @@
 Убрано нечеткое сравнение заголовков, вместо него посимвольное сравнение обработанного текста:
 убраны знаки препинания, перевод в нижний регистр
 Результат:
-Total duplicates: 5561
-Time elapsed: 366 s
-Inserting 5561 entries
-Duplicates in same database: 70
-Duplicates loaded to database
-In 3 databases: 2529
-In Scopus and WoS: 3422
-In Scopus and Spin: 4486
-In Spin and WoS: 2711
+Time elapsed: 187 s
+Total duplicates found:  5536
+Duplicates found in 3 databases:  2519
+Duplicates found in Scopus and WoS:  878
+Duplicates found in Scopus and Spin:  1959
+Duplicates found in Spin and WoS:  180

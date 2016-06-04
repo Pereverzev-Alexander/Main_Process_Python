@@ -10,7 +10,6 @@ class DbWrapper:
         """
     db = None
 
-
     @classmethod
     def get_db_instance(cls):
         """Получение экземпляра БД
@@ -20,7 +19,6 @@ class DbWrapper:
             print("Initialize DB connection")
             cls.init_db_instance()
         return cls.db
-
 
     @classmethod
     def init_db_instance(cls):
@@ -43,7 +41,7 @@ class DbWrapper:
 
 
 def db_get_instance():
-    """Функия для получения экземпляра объекта БД
+    """Функция для получения экземпляра объекта БД
     """
     return DbWrapper.get_db_instance()
 
