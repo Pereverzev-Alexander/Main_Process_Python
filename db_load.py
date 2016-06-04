@@ -106,6 +106,8 @@ def load_json_spin_in_db(dir_json):
                     jsDoi = jsPaper["codes"]["code"]
                     if jsDoi["type"] == "DOI":
                         publication.doi = jsDoi["text"]
+            if publication.doi is None:
+                publication.doi = ""
             if "titles" in jsPaper:
                 if isinstance(jsPaper["titles"]["title"], dict):
                     if isinstance(jsPaper["titles"]["title"]["text"], str):
@@ -160,8 +162,12 @@ def load_json_wos_in_db(dir_json):
                 publication.range_pages = normalize_page_range_publication(jsPaper["page_range"])
             if "doi" in jsPaper:
                 publication.doi = jsPaper["doi"]
+            else:
+                publication.doi = ""
             if "title_en" in jsPaper:
                 publication.title = jsPaper["title_en"]
+            else:
+                publication.title = ""
             publication.authors = []
             if isinstance(jsPaper["authors"], list):
                 if len(jsPaper["authors"]) >= 1:
