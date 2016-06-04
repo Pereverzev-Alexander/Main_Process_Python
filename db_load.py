@@ -110,6 +110,8 @@ def load_json_spin_in_db(dir_json):
                 if isinstance(jsPaper["titles"]["title"], dict):
                     if isinstance(jsPaper["titles"]["title"]["text"], str):
                         publication.title = jsPaper["titles"]["title"]["text"]
+            if publication.title is None:
+                        publication.title = ""
             publication.authors = []
             if isinstance(jsPaper["authors"]["author"], list):
                 for jsAuthor in jsPaper["authors"]["author"]:
