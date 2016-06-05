@@ -1,7 +1,7 @@
 Убрано нечеткое сравнение заголовков, вместо него посимвольное сравнение обработанного текста:
 убраны знаки препинания, перевод в нижний регистр
 Результат:
-Time elapsed: 187 s
+Time elapsed: 157 s
 Total duplicates found:  5536
 Duplicates found in 3 databases:  2519
 Duplicates found in Scopus and WoS:  878
