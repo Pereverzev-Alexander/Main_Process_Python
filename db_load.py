@@ -107,9 +107,7 @@ def load_json_scopus_in_db(dir_json):
             if "keywords" in jsPaper:
                 publication.keywords = jsPaper["keywords"]
             publication.num_authors = len(publication.authors)
-            publication.source = "scopus"
-            publication = check_field_publication(publication)
-            publication.save()
+            db_save_publication(publication, "scopus")
             count += 1
             print(count)
     return count
@@ -142,9 +140,19 @@ def load_json_spin_in_db(dir_json):
                     if jsDoi["type"] == "DOI":
                         publication.doi = jsDoi["text"]
             if "titles" in jsPaper:
-                if isinstance(jsPaper["titles"]["title"], dict):
-                    if isinstance(jsPaper["titles"]["title"]["text"], str):
-                        publication.title = jsPaper["titles"]["title"]["text"]
+                inst = jsPaper["titles"]["title"]
+                if isinstance(inst, dict):
+                    publication.title = inst["text"]
+                elif isinstance(inst, list):
+                    # we prefer english title
+                    for title in inst:
+                        if title["lang"] == "EN":
+                            publication.title = title["text"]
+                    # if EN not found, use russian
+                    if publication.title is None:
+                        publication.title = inst[0]["text"]
+                else:
+                    print("none")
             publication.authors = []
             if isinstance(jsPaper["authors"]["author"], list):
                 for jsAuthor in jsPaper["authors"]["author"]:
@@ -168,9 +176,7 @@ def load_json_spin_in_db(dir_json):
                 elif isinstance(jsPaper["keywords"]["keyword"], dict):
                     publication.keywords.append(jsPaper["keywords"]["keyword"]["text"])
             publication.num_authors = len(publication.authors)
-            publication.source = "spin"
-            publication = check_field_publication(publication)
-            publication.save()
+            db_save_publication(publication, "spin")
             print(count)
             count += 1
     return count
@@ -215,12 +221,18 @@ def load_json_wos_in_db(dir_json):
                 if isinstance(jsPaper["keywords"], list):
                     publication.keywords = jsPaper["keywords"]
             publication.num_authors = len(publication.authors)
-            publication.source = "wos"
-            publication = check_field_publication(publication)
-            publication.save()
+            db_save_publication(publication, "wos")
             print(count)
             count += 1
     return count
+
+
+def db_save_publication(publication, source):
+    """ Запись в БД
+    """
+    publication.source = source
+    publication = check_field_publication(publication)
+    publication.save()
 
 
 def db_drop_publications():
