@@ -3,10 +3,14 @@ import json
 import os
 import re
 import datetime
-from DbInteractions import Publication,db_drop_duplicates
+from DbInteractions import Publication, db_drop_duplicates
 
 
 def normalize_page_range_publication(range_pages_str):
+    """ Функция определения количесвта страниц, занимемых в журнале
+        :parameter range_pages_str: диапазон страниц
+        :return - количесвто занимаемых страниц
+    """
     if range_pages_str is not None:
         range_pages_str = range_pages_str.split("-")
         range_pages_only_int0 = re.sub(r"\D", "", range_pages_str[0])
@@ -17,20 +21,54 @@ def normalize_page_range_publication(range_pages_str):
                         range_pages_only_int1) < 2147483647:
                     return abs(int(range_pages_only_int1) - int(range_pages_only_int0)) + 1
         else:
+            # В статье может быть указан не диапазон, а сразу число страниц
             if range_pages_only_int0.isdigit():
                 return int(range_pages_only_int0)
-    else:
-        return 1
+
+    return 1
 
 
 def open_json_file(dir_json, curr_json):
+    """ Функция открытия json файла в указанной директории
+        :parameter dir_json: путь к директории, в которой лежат json файлы
+        :parameter curr_json название json файла, который бутет открыт
+        :return открытый и распарсенный json файл
+    """
     path = os.path.join(dir_json, curr_json)
     data_file = open(path)
     data = data_file.read()
     return json.loads(data)
 
 
+def check_field_publication(publication):
+    """ Функция проверки инициализации полей класса Publication
+        :parameter publication: объект класса Publication, представляющий информацию о статье
+        :return publication: проинициализированный объект
+    """
+    if publication.doi is None:
+        publication.doi = ""
+    if publication.authors is None:
+        publication.authors = ""
+    if publication.title is None:
+        publication.title = ""
+    if publication.num_pages is None:
+        publication.num_pages = 0
+    if publication.num_authors is None:
+        publication.num_authors = 0
+    if publication.language is None:
+        publication.language = ""
+    if publication.year_publ is None:
+        publication.year_publ = 0
+    if publication.keywords is None:
+        publication.keywords = ""
+    return publication
+
+
 def load_json_scopus_in_db(dir_json):
+    """ Функция загрузки информации о статье в БД из json файлов Scopus'a
+        :parameter dir_json: путь к директории, содержащей json файлы
+        :return count: колчиство статей, запсианных в БД
+    """
     dirs_json = os.listdir(dir_json)
     count = 0
     for x in dirs_json:
@@ -44,26 +82,18 @@ def load_json_scopus_in_db(dir_json):
                     publication.year_publ = (datetime.datetime(1970, 1, 1) + datetime.timedelta(seconds=jsPaper["pubDate"] / 1000)).year
                 else:
                     publication.year_publ = datetime.datetime.fromtimestamp(jsPaper["pubDate"] / 1000).year
-            else:
-                publication.year_publ = 0
             if "language" in jsPaper:
                 publication.language = jsPaper["language"]
-            else:
-                publication.language = ""
             if "pageRange" in jsPaper:
-                publication.range_pages = normalize_page_range_publication(jsPaper["pageRange"])
+                publication.num_pages = normalize_page_range_publication(jsPaper["pageRange"])
             if "doi" in jsPaper:
                 publication.doi = jsPaper["doi"]
-            else:
-                publication.doi = ""
             if "titleEn" in jsPaper:
                 jsTitle = jsPaper["titleEn"]
                 if (jsTitle != "") or (jsTitle != "null"):
                     publication.title = jsPaper["titleEn"]
                 elif "titleRu" in jsPaper:
                     publication.title = jsPaper["titleRu"]
-            else:
-                publication.title = ""
             publication.authors = []
             if isinstance(jsPaper["authors"]["employee"], list):
                 for jsAuthor in jsPaper["authors"]["employee"]:
@@ -78,6 +108,7 @@ def load_json_scopus_in_db(dir_json):
                 publication.keywords = jsPaper["keywords"]
             publication.num_authors = len(publication.authors)
             publication.source = "scopus"
+            publication = check_field_publication(publication)
             publication.save()
             count += 1
             print(count)
@@ -85,6 +116,10 @@ def load_json_scopus_in_db(dir_json):
 
 
 def load_json_spin_in_db(dir_json):
+    """ Функция загрузки информации о статье в БД из json файлов Spin'a
+        :parameter dir_json: путь к директории, содержащей json файлы
+        :return count: колчиство статей, запсианных в БД
+    """
     dirs_json = os.listdir(dir_json)
     count = 0
     for x in dirs_json:
@@ -100,20 +135,16 @@ def load_json_spin_in_db(dir_json):
             if "language" in jsPaper:
                 publication.language = jsPaper["language"]
             if "pages" in jsPaper:
-                publication.range_pages = normalize_page_range_publication(jsPaper["pages"])
+                publication.num_pages = normalize_page_range_publication(jsPaper["pages"])
             if "codes" in jsPaper:
                 if isinstance(jsPaper["codes"]["code"], dict):
                     jsDoi = jsPaper["codes"]["code"]
                     if jsDoi["type"] == "DOI":
                         publication.doi = jsDoi["text"]
-            if publication.doi is None:
-                publication.doi = ""
             if "titles" in jsPaper:
                 if isinstance(jsPaper["titles"]["title"], dict):
                     if isinstance(jsPaper["titles"]["title"]["text"], str):
                         publication.title = jsPaper["titles"]["title"]["text"]
-            if publication.title is None:
-                        publication.title = ""
             publication.authors = []
             if isinstance(jsPaper["authors"]["author"], list):
                 for jsAuthor in jsPaper["authors"]["author"]:
@@ -138,6 +169,7 @@ def load_json_spin_in_db(dir_json):
                     publication.keywords.append(jsPaper["keywords"]["keyword"]["text"])
             publication.num_authors = len(publication.authors)
             publication.source = "spin"
+            publication = check_field_publication(publication)
             publication.save()
             print(count)
             count += 1
@@ -145,6 +177,10 @@ def load_json_spin_in_db(dir_json):
 
 
 def load_json_wos_in_db(dir_json):
+    """ Функция загрузки информации о статье в БД из json файлов WoS'a
+        :parameter dir_json: путь к директории, содержащей json файлы
+        :return count: колчиство статей, запсианных в БД
+    """
     dirs_json = os.listdir(dir_json)
     count = 0
     for x in dirs_json:
@@ -159,15 +195,11 @@ def load_json_wos_in_db(dir_json):
                         publication.language = jsPaper["static_data"]["fullrecord_metadata"]["languages"]["language"][
                                 "text"]
             if "page_range" in jsPaper:
-                publication.range_pages = normalize_page_range_publication(jsPaper["page_range"])
+                publication.num_pages = normalize_page_range_publication(jsPaper["page_range"])
             if "doi" in jsPaper:
                 publication.doi = jsPaper["doi"]
-            else:
-                publication.doi = ""
             if "title_en" in jsPaper:
                 publication.title = jsPaper["title_en"]
-            else:
-                publication.title = ""
             publication.authors = []
             if isinstance(jsPaper["authors"], list):
                 if len(jsPaper["authors"]) >= 1:
@@ -184,6 +216,7 @@ def load_json_wos_in_db(dir_json):
                     publication.keywords = jsPaper["keywords"]
             publication.num_authors = len(publication.authors)
             publication.source = "wos"
+            publication = check_field_publication(publication)
             publication.save()
             print(count)
             count += 1
@@ -191,6 +224,8 @@ def load_json_wos_in_db(dir_json):
 
 
 def db_drop_publications():
+    """ Функция пересоздания таблициы в БД, хранящей инфоромацию о статьях
+    """
     # clear duplicates table
     db_drop_duplicates()
     Publication.drop_table(True)
@@ -200,7 +235,10 @@ def db_drop_publications():
 
 # main part
 db_drop_publications()
+# load articles from Spin
 count_spin = load_json_spin_in_db(r'publications\spin')
+# load articles from Scopus
 count_scopus = load_json_scopus_in_db(r'publications\scopus')
+# load articles from WoS
 count_wos = load_json_wos_in_db(r'publications\wos')
 print("Articles uploaded to the database ", str(count_scopus + count_spin + count_wos))

@@ -19,113 +19,26 @@ class Publication(Model):
         doi - ДОИ
         language - язык, на котором написана статья
         keywords - ключевые слова
-        range_pages - количество страниц
+        num_pages - количество страниц
         year_publ - год публикации
         id - ид статьи в БД (первичный ключ)
         source - название базы, в которой опубликована статья (SPIN, WoS, SCOPUS)
     """
     db_table = "publication"
 
-    title = CharField()
-    authors = CharField()
+    title = TextField()
+    authors = TextField()
     num_authors = IntegerField()
     doi = CharField()
     language = CharField()
-    keywords = CharField()
-    range_pages = CharField()
+    keywords = TextField()
+    num_pages = CharField()
     year_publ = IntegerField()
     id = PrimaryKeyField()
     source = CharField()
 
     class Meta:
         database = db_get_instance()
-
-    def parse_json_SCOPUS(self, dir_json):
-        dirs_json = os.listdir(dir_json)
-        count = 0
-        for x in dirs_json:
-            path = os.path.join(dir_json, x)
-            data_file = open(path)
-            data = data_file.read()
-            js = json.loads(data)
-            for jsPaper in js:
-                if "pubDate" in jsPaper:
-                    # datetime.datetime.fromtimestamp не умеет работать с отрицательными значениями, выдает ошибку erreno 22
-                    # решение взяли отсюда http://stackoverflow.com/questions/17231711/how-to-create-datetime-from-a-negative-epoch-in-python
-                    if jsPaper["pubDate"] < 0:
-                        self.year_publ = (datetime.datetime(1970, 1, 1) + datetime.timedelta(seconds=jsPaper["pubDate"]/1000)).year
-                    else:
-                        self.year_publ = datetime.datetime.fromtimestamp(jsPaper["pubDate"]/1000).year
-                else:
-                    self.year_publ = 0
-                if "language" in jsPaper:
-                    self.language = jsPaper["language"]
-                else:
-                    self.language = ""
-                if "pageRange" in jsPaper:
-                    range_pages_str = jsPaper["pageRange"]
-                    if range_pages_str is not None:
-                        range_pages_str = range_pages_str.split("-")
-                        if len(range_pages_str) == 2:
-                            range_pages_only_int0 = re.sub(r"\D", "", range_pages_str[0])
-                            range_pages_only_int1 = re.sub(r"\D", "", range_pages_str[1])
-                            if range_pages_only_int0.isdigit() and range_pages_only_int1.isdigit():
-                                if 0 < int(range_pages_only_int0) < 2147483647 and 0 < int(
-                                        range_pages_only_int1) < 2147483647:
-                                    self.range_pages = abs(int(range_pages_only_int1) - int(range_pages_only_int0)) + 1
-                                else:
-                                    self.range_pages = 1
-                            else:
-                                self.range_pages = 1
-                        else:
-                            self.range_pages = 1
-                    else:
-                        self.range_pages = 1
-                else:
-                    self.range_pages = 1
-                if "doi" in jsPaper:
-                    self.doi = jsPaper["doi"]
-                else:
-                    self.doi = ""
-                if "titleEn" in jsPaper:
-                    jsTitle = jsPaper["titleEn"]
-                    if (jsTitle != "") or (jsTitle != "null"):
-                        self.title = jsPaper["titleEn"]
-                    elif "titleRu" in jsPaper:
-                        self.title = jsPaper["titleRu"]
-                else:
-                    self.title = ""
-                self.authors = []
-                if isinstance(jsPaper["authors"]["employee"], list):
-                    for jsAuthor in jsPaper["authors"]["employee"]:
-                        self.authors.append(jsAuthor["name"])
-                if isinstance(jsPaper["authors"]["external"], list):
-                    for jsAuthor in jsPaper["authors"]["external"]:
-                        self.authors.append(jsAuthor["name"])
-                if isinstance(jsPaper["authors"]["unknownInternal"], list):
-                    for jsAuthor in jsPaper["authors"]["unknownInternal"]:
-                        self.authors.append(jsAuthor["name"])
-                if "keywords" in jsPaper:
-                    self.keywords = jsPaper["keywords"]
-                self.num_authors = len(self.authors)
-                self.source = "scopus"
-                self.save()
-                count += 1
-                print(count)
-
-
-# TO BE REFACTORED
-# unify None and invalid fields format
-def normalize_publication(publication):
-    """ Приведение полей (doi и range_pages) статьи к общему виду
-        :parameter publication: объект класса Publication
-        :returns publication: нормализованная объект
-    """
-    if publication.doi == "None" or publication.doi == "0":
-        publication.doi = ""
-    if publication.range_pages == "None":
-        publication.range_pages = ""
-    return publication
 
 
 def db_select_year(year, source):
@@ -137,7 +50,6 @@ def db_select_year(year, source):
     pub_list = []
     for publication in Publication.select().where((Publication.source == source) &
                                                   (Publication.year_publ == year)):
-        normalize_publication(publication)
         pub_list.append(publication)
     return pub_list
 
